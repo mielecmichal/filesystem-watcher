@@ -35,8 +35,10 @@ public class FilesystemConstraints implements Predicate<FilesystemEvent> {
     public boolean test(FilesystemEvent event) {
         Path path = event.getPath();
         BasicFileAttributes fileAttributes = readAttributes(path);
-        if (fileTypes.stream().noneMatch(fileType -> fileType.predicate.test(fileAttributes))) {
-            return false;
+        if (!fileTypes.isEmpty()) {
+            if (fileTypes.stream().noneMatch(fileType -> fileType.predicate.test(fileAttributes))) {
+                return false;
+            }
         }
 
         String filename = path.getFileName().toString();
