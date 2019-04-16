@@ -20,7 +20,7 @@ public class FilesystemMonitor implements FilesystemWatcher {
     private final LinkedHashSet<FilesystemEvent> readerBuffer = new LinkedHashSet<>();
 
     @NonFinal
-    private boolean readerCompleted;
+    private boolean readerCompleted = false;
 
     @Override
     public void watch() {
@@ -28,7 +28,7 @@ public class FilesystemMonitor implements FilesystemWatcher {
         NioFilesystemWatcher nioFilesystemWatcher = NioFilesystemWatcher.builder()
                 .watchedPath(watchedPath)
                 .watchedConstraints(watchedConstraints)
-                .watchedConsumer(readerBuffer::add)
+                .watchedConsumer(this::consumeEvent)
                 .build();
         nioFilesystemWatcher.watch();
 
@@ -43,6 +43,8 @@ public class FilesystemMonitor implements FilesystemWatcher {
     }
 
     private void consumeEvent(FilesystemEvent event){
+        System.out.println("Consumed" + event);
+
         if(!readerCompleted){
             readerBuffer.add(event);
             return;

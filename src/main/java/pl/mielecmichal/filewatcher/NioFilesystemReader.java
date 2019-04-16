@@ -33,7 +33,7 @@ public class NioFilesystemReader implements FilesystemWatcher{
             throw new UncheckedIOException(e);
         }
 
-        visitor.getEvents().forEach(watchedConsumer::accept);
+        visitor.getEvents().forEach(watchedConsumer);
     }
 
     @Value
