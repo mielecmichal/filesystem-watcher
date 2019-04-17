@@ -1,4 +1,4 @@
-package pl.mielecmichal.filewatcher;
+package pl.mielecmichal.filesystemmonitor;
 
 public interface FilesystemWatcher {
 

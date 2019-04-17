@@ -1,4 +1,4 @@
-package pl.mielecmichal.filewatcher;
+package pl.mielecmichal.filesystemmonitor;
 
 import lombok.Builder;
 import lombok.Value;
@@ -24,7 +24,6 @@ public class FilesystemMonitor implements FilesystemWatcher {
 
     @Override
     public void watch() {
-
         NioFilesystemWatcher nioFilesystemWatcher = NioFilesystemWatcher.builder()
                 .watchedPath(watchedPath)
                 .watchedConstraints(watchedConstraints)
@@ -43,8 +42,6 @@ public class FilesystemMonitor implements FilesystemWatcher {
     }
 
     private void consumeEvent(FilesystemEvent event){
-        System.out.println("Consumed" + event);
-
         if(!readerCompleted){
             readerBuffer.add(event);
             return;
