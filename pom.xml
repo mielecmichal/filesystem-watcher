@@ -8,6 +8,28 @@
     <artifactId>filesystem-monitor</artifactId>
     <version>0.1</version>
 
+    <name>Filesystem Monitor</name>
+
+    <description>
+        Watch for filesystem changes in you Java project in simple and robust way.
+        Project utilize Java 7 APIs like WatchService (which does not pool filesystem for changes)
+        and FileVisitor (which handles intensively changing directories)
+    </description>
+
+    <url>https://github.com/mielecmichal/filesystem-watcher</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>https://github.com/mielecmichal/filesystem-watcher</url>
+    </scm>
+
     <properties>
         <maven.compiler.target>11</maven.compiler.target>
         <maven.compiler.source>11</maven.compiler.source>
