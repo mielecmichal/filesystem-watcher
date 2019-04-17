@@ -1,4 +1,4 @@
-package pl.mielecmichal.filewatcher;
+package pl.mielecmichal.filesystemmonitor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -34,8 +34,8 @@ public class FilesystemConstraints implements Predicate<FilesystemEvent> {
     @Override
     public boolean test(FilesystemEvent event) {
         Path path = event.getPath();
-        BasicFileAttributes fileAttributes = readAttributes(path);
-        if (!fileTypes.isEmpty()) {
+        if (event.getEventType() != FilesystemEvent.FilesystemEventType.DELETED && !fileTypes.isEmpty()) {
+            BasicFileAttributes fileAttributes = readAttributes(path);
             if (fileTypes.stream().noneMatch(fileType -> fileType.predicate.test(fileAttributes))) {
                 return false;
             }
