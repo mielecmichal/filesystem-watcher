@@ -25,7 +25,7 @@ public class NioFilesystemReader implements FilesystemWatcher{
     private final Consumer<FilesystemEvent> watchedConsumer;
 
     @Override
-    public void watch() {
+    public void startWatching() {
         ConstraintsFilteringVisitor visitor = new ConstraintsFilteringVisitor(watchedConstraints);
         try {
             Files.walkFileTree(watchedPath, visitor);
@@ -34,6 +34,11 @@ public class NioFilesystemReader implements FilesystemWatcher{
         }
 
         visitor.getEvents().forEach(watchedConsumer);
+    }
+
+    @Override
+    public void stopWatching() {
+
     }
 
     @Value
@@ -69,7 +74,16 @@ public class NioFilesystemReader implements FilesystemWatcher{
 
         @Override
         public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
-            return FileVisitResult.TERMINATE;
+            FilesystemEvent filesystemEvent = FilesystemEvent.builder()
+                    .eventType(FilesystemEvent.FilesystemEventType.INITIAL)
+                    .path(dir)
+                    .build();
+
+            if (constraints.test(filesystemEvent)) {
+                events.add(filesystemEvent);
+            }
+
+            return FileVisitResult.CONTINUE;
         }
     }
 }

@@ -1,5 +1,6 @@
 package pl.mielecmichal.filesystemmonitor;
 
+import com.sun.nio.file.ExtendedWatchEventModifier;
 import io.vavr.control.Try;
 import lombok.Builder;
 import lombok.Value;
@@ -25,27 +26,41 @@ public class NioFilesystemWatcher implements FilesystemWatcher{
     private final Consumer<FilesystemEvent> watchedConsumer;
 
     private final BlockingQueue<FilesystemEvent> blockingQueue = new ArrayBlockingQueue<>(100000);
+    @Builder.Default
     private final ExecutorService producersExecutor = Executors.newSingleThreadExecutor();
+    @Builder.Default
     private final ExecutorService consumersExecutor = Executors.newSingleThreadExecutor();
 
-    private WatchService watcher = Try.of(() -> FileSystems.getDefault().newWatchService()).getOrElseThrow(IllegalStateException::new);
+    private WatchService watcher = Try.of(() -> FileSystems.getDefault().newWatchService()).getOrElseThrow((e) -> new IllegalStateException(e));
     @NonFinal
 	private Future<?> consumer;
 	@NonFinal
 	private Future<?> producer;
     @Override
-    public void watch() {
-        Try.of(() -> watchedPath.register(watcher, ALL_WATCH_KINDS)).getOrElseThrow(IllegalStateException::new);
+    public void startWatching() {
+        Try.of(() -> watchedPath.register(watcher, ALL_WATCH_KINDS)).getOrElseThrow((e) -> new IllegalStateException(e));
 		 consumer = consumersExecutor.submit(this::consumeEvents);
 		 producer = producersExecutor.submit(this::produceEvents);
 	}
 
-    private void produceEvents() {
+	@Override
+	public void stopWatching() {
+    	blockingQueue.clear();
+		producersExecutor.shutdownNow();
+		consumersExecutor.shutdownNow();
+	}
+
+	private void produceEvents() {
         try {
             WatchKey take = watcher.take();
             List<WatchEvent<?>> watchEvents = take.pollEvents();
             for (WatchEvent<?> watchEvent : watchEvents) {
-                log.fine(String.format("Found watch event = %s", watchEvent));
+
+            	if(Thread.currentThread().isInterrupted()){
+            		break;
+				}
+
+                log.fine(String.format("Found startWatching event = %s", watchEvent));
                 if (watchEvent.kind() == OVERFLOW) {
                     log.severe(String.format("OVERFLOW watchEvent occurred %s times. Operating system queue was overflowed. File events could be lost.", watchEvent.count()));
                     continue;
@@ -62,7 +77,6 @@ public class NioFilesystemWatcher implements FilesystemWatcher{
 
                 if (watchedConstraints.test(filesystemEvent)) {
 					log.info("Found " + filesystemEvent);
-
 					blockingQueue.put(filesystemEvent);
                 }
             }
