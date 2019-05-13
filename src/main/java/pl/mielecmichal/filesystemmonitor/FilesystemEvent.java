@@ -18,7 +18,6 @@ public class FilesystemEvent {
 
     @RequiredArgsConstructor
     public enum FilesystemEventType {
-
         INITIAL,
         CREATED,
         DELETED,

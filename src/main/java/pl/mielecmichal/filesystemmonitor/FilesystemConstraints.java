@@ -30,6 +30,7 @@ public class FilesystemConstraints implements Predicate<FilesystemEvent> {
     private final List<String> filenameSubstrings = List.of();
     private final List<Pattern> filenamePatterns = List.of();
     private final List<FileType> fileTypes = List.of();
+    private final boolean isRecursive = true;
 
     @Override
     public boolean test(FilesystemEvent event) {
