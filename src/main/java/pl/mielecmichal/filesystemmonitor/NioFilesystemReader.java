@@ -6,10 +6,7 @@ import lombok.extern.java.Log;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +15,7 @@ import java.util.function.Consumer;
 @Log
 @Builder
 @Value
-public class NioFilesystemReader implements FilesystemWatcher{
+public class NioFilesystemReader implements FilesystemWatcher {
 
     private final Path watchedPath;
     private final FilesystemConstraints watchedConstraints;
@@ -38,23 +35,30 @@ public class NioFilesystemReader implements FilesystemWatcher{
 
     @Override
     public void stopWatching() {
-
+        // For now we do not need to implement this. Maybe later to make this class more responsive to stop.
     }
 
     @Value
-    private static final class ConstraintsFilteringVisitor implements FileVisitor<Path> {
+    private static final class ConstraintsFilteringVisitor extends SimpleFileVisitor<Path> {
 
         private final List<FilesystemEvent> events = new ArrayList<>();
         private final FilesystemConstraints constraints;
 
         @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            super.postVisitDirectory(dir, exc);
+            addFilesystemEvent(dir);
             return FileVisitResult.CONTINUE;
         }
 
         @Override
-        public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) {
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            super.visitFile(file, attrs);
+            addFilesystemEvent(file);
+            return FileVisitResult.CONTINUE;
+        }
 
+        private void addFilesystemEvent(Path path) {
             FilesystemEvent filesystemEvent = FilesystemEvent.builder()
                     .eventType(FilesystemEvent.FilesystemEventType.INITIAL)
                     .path(path)
@@ -63,27 +67,6 @@ public class NioFilesystemReader implements FilesystemWatcher{
             if (constraints.test(filesystemEvent)) {
                 events.add(filesystemEvent);
             }
-
-            return FileVisitResult.CONTINUE;
-        }
-
-        @Override
-        public FileVisitResult visitFileFailed(Path file, IOException exc) {
-            return FileVisitResult.CONTINUE;
-        }
-
-        @Override
-        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
-            FilesystemEvent filesystemEvent = FilesystemEvent.builder()
-                    .eventType(FilesystemEvent.FilesystemEventType.INITIAL)
-                    .path(dir)
-                    .build();
-
-            if (constraints.test(filesystemEvent)) {
-                events.add(filesystemEvent);
-            }
-
-            return FileVisitResult.CONTINUE;
         }
     }
 }

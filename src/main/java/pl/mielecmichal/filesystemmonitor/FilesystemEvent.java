@@ -29,10 +29,8 @@ public class FilesystemEvent {
                 ENTRY_MODIFY, MODIFIED
         );
 
-        static FilesystemEventType of(WatchEvent.Kind kind){
+        static FilesystemEventType of(WatchEvent.Kind kind) {
             return CORRESPONDING_WATCH_KINDS.get(kind);
         }
     }
-
-
 }
