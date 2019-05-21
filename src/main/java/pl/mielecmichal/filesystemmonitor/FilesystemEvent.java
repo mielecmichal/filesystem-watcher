@@ -33,4 +33,11 @@ public class FilesystemEvent {
             return CORRESPONDING_WATCH_KINDS.get(kind);
         }
     }
+
+    public static FilesystemEvent of(FilesystemEventType eventType, Path path) {
+        return FilesystemEvent.builder()
+                .eventType(eventType)
+                .path(path)
+                .build();
+    }
 }
