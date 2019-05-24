@@ -16,6 +16,7 @@ import pl.mielecmichal.filesystemmonitor.utilities.Filesystem;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -105,12 +106,14 @@ class SinglePathTest {
     @MethodSource
     void shouldWatchModifiedFile(PathKind pathKind, ModificationKind strategy) throws InterruptedException {
         //given
+        long ecpectedFiles = 3;
         Path testFile = pathKind.apply(temporaryFolder);
-        CountDownLatch latch = new CountDownLatch(2);
+        CountDownLatch latch = new CountDownLatch(3);
         List<FilesystemEvent> receivedEvents = new ArrayList<>();
         FilesystemMonitor monitor = FilesystemMonitor.builder()
                 .watchedPath(temporaryFolder)
                 .watchedConsumer(event -> {
+                    System.out.println(event);
                     receivedEvents.add(event);
                     latch.countDown();
                 })
@@ -121,11 +124,11 @@ class SinglePathTest {
         latch.await(2000, TimeUnit.MILLISECONDS);
 
         //then
-        Assertions.assertThat(receivedEvents).hasSize(1);
+        Assertions.assertThat(receivedEvents).hasSize(3);
         Assertions.assertThat(receivedEvents).extracting(FilesystemEvent::getPath)
-                .contains(testFile, testFile);
+                .contains(temporaryFolder, testFile, testFile);
         Assertions.assertThat(receivedEvents).extracting(FilesystemEvent::getEventType)
-                .contains(MODIFIED);
+                .contains(MODIFIED, INITIAL, MODIFIED);
     }
 
     public Stream<Arguments> shouldWatchModifiedFile() {

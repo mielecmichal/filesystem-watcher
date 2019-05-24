@@ -27,11 +27,19 @@ public class FilesystemMonitor implements FilesystemWatcher {
 	@Override
 	public void startWatching() {
 
-		watcher = RecursiveFilesystemMonitor.builder()
-				.watchedPath(watchedPath)
-				.watchedConstraints(watchedConstraints)
-				.watchedConsumer(this::consumeEvent)
-				.build();
+		if(watchedConstraints.isRecursive()) {
+			watcher = RecursiveFilesystemMonitor.builder()
+					.watchedPath(watchedPath)
+					.watchedConstraints(watchedConstraints)
+					.watchedConsumer(this::consumeEvent)
+					.build();
+		} else {
+			watcher = NioFilesystemWatcher.builder()
+					.watchedPath(watchedPath)
+					.watchedConstraints(watchedConstraints)
+					.watchedConsumer(this::consumeEvent)
+					.build();
+		}
 
 		reader = NioFilesystemReader.builder()
 				.watchedPath(watchedPath)
