@@ -48,6 +48,9 @@ public class NioFilesystemReader implements FilesystemWatcher {
         public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
             super.postVisitDirectory(dir, exc);
             addFilesystemEvent(dir);
+            if(!constraints.isRecursive()){
+                return FileVisitResult.TERMINATE;
+            }
             return FileVisitResult.CONTINUE;
         }
 

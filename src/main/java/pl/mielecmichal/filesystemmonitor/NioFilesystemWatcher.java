@@ -1,6 +1,5 @@
 package pl.mielecmichal.filesystemmonitor;
 
-import com.sun.nio.file.ExtendedWatchEventModifier;
 import io.vavr.control.Try;
 import lombok.Builder;
 import lombok.Value;
@@ -10,7 +9,6 @@ import lombok.extern.java.Log;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.*;
-import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -103,7 +101,6 @@ public class NioFilesystemWatcher implements FilesystemWatcher {
         try {
             FilesystemEvent event = blockingQueue.take();
             log.info("Took " + event);
-
             watchedConsumer.accept(event);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
