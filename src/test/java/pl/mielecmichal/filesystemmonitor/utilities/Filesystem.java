@@ -8,49 +8,48 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
+import java.util.function.Supplier;
 
 @Value
 public class Filesystem {
 
-	private final Path temporaryFolder;
+    private final Path temporaryFolder;
 
-	public static void deleteFile(Path path) {
-		try {
-			Files.deleteIfExists(path);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
+    public static void deleteFile(Path path) {
+        IOExceptionWrapper.of(() -> Files.deleteIfExists(path)).get();
+    }
 
-	public static Path createDirectory(Path path, String name) {
-		try {
-			return Files.createDirectory(path.resolve(name));
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
+    public static Path createDirectory(Path path, String name) {
+        return IOExceptionWrapper.of(() -> Files.createDirectory(path.resolve(name))).get();
+    }
 
-	public static Path createFile(Path path, String name) {
-		try {
-			return Files.createFile(path.resolve(name));
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
+    public static Path createFile(Path path, String name) {
+        return IOExceptionWrapper.of(() -> Files.createFile(path.resolve(name))).get();
+    }
 
-	public static Set<PosixFilePermission> getPosixFilePermissions(Path path) {
-		try {
-			return Files.getPosixFilePermissions(path);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
+    public static Set<PosixFilePermission> getPosixFilePermissions(Path path) {
+        return IOExceptionWrapper.of(() -> Files.getPosixFilePermissions(path)).get();
+    }
 
-	public static Path setPosixFilePermissions(Path path, Set<PosixFilePermission> permissions) {
-		try {
-			return Files.setPosixFilePermissions(path, permissions);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-	}
+    public static Path setPosixFilePermissions(Path path, Set<PosixFilePermission> permissions) {
+        return IOExceptionWrapper.of(() -> Files.setPosixFilePermissions(path, permissions)).get();
+    }
+
+    static class IOExceptionWrapper {
+
+        @FunctionalInterface
+        interface ThrowingSupplier<T> {
+            T apply() throws IOException;
+        }
+
+        static <T> Supplier<T> of(ThrowingSupplier<T> throwingSupplier) {
+            return () -> {
+                try {
+                    return throwingSupplier.apply();
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            };
+        }
+    }
 }
