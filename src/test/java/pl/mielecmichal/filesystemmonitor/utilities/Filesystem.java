@@ -16,33 +16,33 @@ public class Filesystem {
     private final Path temporaryFolder;
 
     public static void deleteFile(Path path) {
-        IOExceptionWrapper.of(() -> Files.deleteIfExists(path)).get();
+        TryIO.with(() -> Files.deleteIfExists(path)).get();
     }
 
     public static Path createDirectory(Path path, String name) {
-        return IOExceptionWrapper.of(() -> Files.createDirectory(path.resolve(name))).get();
+        return TryIO.with(() -> Files.createDirectory(path.resolve(name))).get();
     }
 
     public static Path createFile(Path path, String name) {
-        return IOExceptionWrapper.of(() -> Files.createFile(path.resolve(name))).get();
+        return TryIO.with(() -> Files.createFile(path.resolve(name))).get();
     }
 
     public static Set<PosixFilePermission> getPosixFilePermissions(Path path) {
-        return IOExceptionWrapper.of(() -> Files.getPosixFilePermissions(path)).get();
+        return TryIO.with(() -> Files.getPosixFilePermissions(path)).get();
     }
 
     public static Path setPosixFilePermissions(Path path, Set<PosixFilePermission> permissions) {
-        return IOExceptionWrapper.of(() -> Files.setPosixFilePermissions(path, permissions)).get();
+        return TryIO.with(() -> Files.setPosixFilePermissions(path, permissions)).get();
     }
 
-    static class IOExceptionWrapper {
+    static class TryIO {
 
         @FunctionalInterface
         interface ThrowingSupplier<T> {
             T apply() throws IOException;
         }
 
-        static <T> Supplier<T> of(ThrowingSupplier<T> throwingSupplier) {
+        static <T> Supplier<T> with(ThrowingSupplier<T> throwingSupplier) {
             return () -> {
                 try {
                     return throwingSupplier.apply();
