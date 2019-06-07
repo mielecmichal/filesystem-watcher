@@ -8,7 +8,7 @@ import java.util.function.Function;
 
 @RequiredArgsConstructor
 public enum PathKind implements Function<Path, Path> {
-	DIRECTORY(path -> Filesystem.createDirectory(path, "directory")),
+	EMPTY_DIRECTORY(path -> Filesystem.createDirectory(path, "directory")),
 	FILE(path -> Filesystem.createFile(path, "test.txt"));
 
 	private final Function<Path, Path> pathSupplier;

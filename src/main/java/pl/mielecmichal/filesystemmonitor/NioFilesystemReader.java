@@ -1,6 +1,7 @@
 package pl.mielecmichal.filesystemmonitor;
 
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.java.Log;
 
@@ -23,7 +24,7 @@ public class NioFilesystemReader implements FilesystemWatcher {
 
     @Override
     public void startWatching() {
-        ConstraintsFilteringVisitor visitor = new ConstraintsFilteringVisitor(watchedConstraints);
+        ConstraintsFilteringVisitor visitor = new ConstraintsFilteringVisitor(watchedPath, watchedConstraints);
         try {
             Files.walkFileTree(watchedPath, visitor);
         } catch (IOException e) {
@@ -39,18 +40,27 @@ public class NioFilesystemReader implements FilesystemWatcher {
     }
 
     @Value
+    @EqualsAndHashCode(callSuper = true)
     private static final class ConstraintsFilteringVisitor extends SimpleFileVisitor<Path> {
 
+        private final Path watchedPatch;
         private final List<FilesystemEvent> events = new ArrayList<>();
         private final FilesystemConstraints constraints;
 
         @Override
         public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
             super.postVisitDirectory(dir, exc);
+
+            if (dir.equals(watchedPatch)) {
+                return FileVisitResult.CONTINUE;
+            }
+
             addFilesystemEvent(dir);
-            if(!constraints.isRecursive()){
+
+            if (!constraints.isRecursive()) {
                 return FileVisitResult.TERMINATE;
             }
+
             return FileVisitResult.CONTINUE;
         }
 
