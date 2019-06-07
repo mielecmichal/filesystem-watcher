@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static pl.mielecmichal.filesystemmonitor.Constants.TEST_TIMEOUT;
 import static pl.mielecmichal.filesystemmonitor.FilesystemEvent.FilesystemEventType.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -43,10 +44,9 @@ class SinglePathTest {
         monitor.startWatching();
 
         //then
-        Assertions.assertThat(receivedEvents).hasSize(2);
+        Assertions.assertThat(receivedEvents).hasSize(1);
         Assertions.assertThat(receivedEvents).containsExactly(
-                FilesystemEvent.of(INITIAL, testFile),
-                FilesystemEvent.of(INITIAL, temporaryFolder)
+                FilesystemEvent.of(INITIAL, testFile)
         );
     }
 
@@ -91,7 +91,7 @@ class SinglePathTest {
         //when
         monitor.startWatching();
         Filesystem.deleteFile(testFile);
-        latch.await(2000, TimeUnit.MILLISECONDS);
+        latch.await(TEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
 
         //then
         Assertions.assertThat(receivedEvents).hasSize(2);
@@ -106,9 +106,8 @@ class SinglePathTest {
     @MethodSource
     void shouldWatchModifiedFile(PathKind pathKind, ModificationKind strategy) throws InterruptedException {
         //given
-        long ecpectedFiles = 3;
-        Path testFile = pathKind.apply(temporaryFolder);
-        CountDownLatch latch = new CountDownLatch(3);
+        Path path = pathKind.apply(temporaryFolder);
+        CountDownLatch latch = new CountDownLatch(2);
         List<FilesystemEvent> receivedEvents = new ArrayList<>();
         FilesystemMonitor monitor = FilesystemMonitor.builder()
                 .watchedPath(temporaryFolder)
@@ -120,15 +119,15 @@ class SinglePathTest {
                 .build();
         //when
         monitor.startWatching();
-        strategy.accept(testFile);
-        latch.await(2000, TimeUnit.MILLISECONDS);
+        strategy.accept(path);
+        latch.await(TEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
 
         //then
-        Assertions.assertThat(receivedEvents).hasSize(3);
+        Assertions.assertThat(receivedEvents).hasSize(2);
         Assertions.assertThat(receivedEvents).extracting(FilesystemEvent::getPath)
-                .contains(temporaryFolder, testFile, testFile);
+                .contains(path, path);
         Assertions.assertThat(receivedEvents).extracting(FilesystemEvent::getEventType)
-                .contains(MODIFIED, INITIAL, MODIFIED);
+                .contains(INITIAL, MODIFIED);
     }
 
     public Stream<Arguments> shouldWatchModifiedFile() {

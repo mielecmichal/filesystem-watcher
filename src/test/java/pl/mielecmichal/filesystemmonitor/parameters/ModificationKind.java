@@ -31,6 +31,7 @@ public enum ModificationKind implements Consumer<Path> {
 	private static void removePermission(Path path) {
 		Set<PosixFilePermission> permissions = Filesystem.getPosixFilePermissions(path);
 		PosixFilePermission toRemove = permissions.stream()
+				.filter(permission -> !permission.toString().startsWith("OWNER"))
 				.findAny()
 				.orElseThrow(() -> new IllegalArgumentException(String.format("Cannot remove POSIX attribute, because given path=%s have all them set to false", path)));
 		permissions.remove(toRemove);

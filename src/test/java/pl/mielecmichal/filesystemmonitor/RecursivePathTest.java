@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static pl.mielecmichal.filesystemmonitor.Constants.TEST_TIMEOUT;
 import static pl.mielecmichal.filesystemmonitor.FilesystemEvent.FilesystemEventType.*;
 
 class RecursivePathTest {
@@ -39,7 +40,7 @@ class RecursivePathTest {
 		//when
 		monitor.startWatching();
 		modificationKind.accept(recursiveFile);
-		countDownLatch.await(200, TimeUnit.MILLISECONDS);
+		countDownLatch.await(TEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
 
 		//then
 		Assertions.assertThat(receivedEvents).hasSize(3);
