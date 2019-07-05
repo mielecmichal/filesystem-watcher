@@ -1,5 +1,6 @@
 package pl.mielecmichal.filesystemmonitor;
 
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.Wither;
@@ -14,6 +15,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @Value
+@Builder
 @Wither
 public class FilesystemConstraints implements Predicate<FilesystemEvent> {
 
@@ -27,10 +29,16 @@ public class FilesystemConstraints implements Predicate<FilesystemEvent> {
         private final Predicate<BasicFileAttributes> predicate;
     }
 
-    private final List<String> filenameSubstrings = List.of();
-    private final List<Pattern> filenamePatterns = List.of();
-    private final List<FileType> fileTypes = List.of();
-    private final boolean isRecursive = false;
+    public static final FilesystemConstraints DEFAULT = FilesystemConstraints.builder().build()
+            .withFilenamePatterns(List.of())
+            .withFilenameSubstrings(List.of())
+            .withFileTypes(List.of())
+            .withRecursive(false);
+
+    private final List<String> filenameSubstrings;
+    private final List<Pattern> filenamePatterns;
+    private final List<FileType> fileTypes;
+    private final boolean isRecursive;
 
     @Override
     public boolean test(FilesystemEvent event) {

@@ -29,8 +29,9 @@ class RecursivePathTest {
 		//when
 		CountDownLatch countDownLatch = new CountDownLatch(3);
 		List<FilesystemEvent> receivedEvents = new ArrayList<>();
-		FilesystemMonitor monitor = FilesystemMonitor.builder()
+		FilesystemWatcher monitor = RecursiveFilesystemMonitor.builder()
 				.watchedPath(temporaryDirectory)
+				.watchedConstraints(FilesystemConstraints.DEFAULT.withRecursive(true))
 				.watchedConsumer(event -> {
 					receivedEvents.add(event);
 					countDownLatch.countDown();
@@ -44,7 +45,7 @@ class RecursivePathTest {
 
 		//then
 		Assertions.assertThat(receivedEvents).hasSize(3);
-		Assertions.assertThat(receivedEvents).containsExactly(
+		Assertions.assertThat(receivedEvents).contains(
 				FilesystemEvent.builder().path(recursive).eventType(INITIAL).build(),
 				FilesystemEvent.builder().path(recursiveFile).eventType(INITIAL).build(),
 				FilesystemEvent.builder().path(recursiveFile).eventType(MODIFIED).build()
