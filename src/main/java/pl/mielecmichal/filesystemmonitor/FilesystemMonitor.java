@@ -6,6 +6,9 @@ import lombok.experimental.NonFinal;
 
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 @Value
@@ -14,8 +17,11 @@ public class FilesystemMonitor implements FilesystemWatcher {
 
 	private final Path watchedPath;
 	private final Consumer<FilesystemEvent> watchedConsumer;
-	private final FilesystemConstraints watchedConstraints = new FilesystemConstraints();
+	private final FilesystemConstraints watchedConstraints = FilesystemConstraints.DEFAULT;
 	private final LinkedHashSet<FilesystemEvent> readerBuffer = new LinkedHashSet<>();
+
+	private final ExecutorService producersExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "filesystem-monitor-producers" + UUID.randomUUID().toString()));
+	private final ExecutorService consumersExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "filesystem-monitor-consumers" + UUID.randomUUID().toString()));
 
 	@NonFinal
 	private FilesystemWatcher watcher;
@@ -38,6 +44,8 @@ public class FilesystemMonitor implements FilesystemWatcher {
 					.watchedPath(watchedPath)
 					.watchedConstraints(watchedConstraints)
 					.watchedConsumer(this::consumeEvent)
+					.producersExecutor(producersExecutor)
+					.consumersExecutor(consumersExecutor)
 					.build();
 		}
 

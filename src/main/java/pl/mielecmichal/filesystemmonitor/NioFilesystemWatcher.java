@@ -27,12 +27,12 @@ public class NioFilesystemWatcher implements FilesystemWatcher {
     private final Consumer<FilesystemEvent> watchedConsumer;
 
     private final BlockingQueue<FilesystemEvent> blockingQueue = new ArrayBlockingQueue<>(100000);
-    @Builder.Default
-    private final ExecutorService producersExecutor = Executors.newSingleThreadExecutor();
-    @Builder.Default
-    private final ExecutorService consumersExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService producersExecutor;
+    private final ExecutorService consumersExecutor;
 
-    private WatchService watcher = Try.of(() -> FileSystems.getDefault().newWatchService()).getOrElseThrow((Function<Throwable, IllegalStateException>) IllegalStateException::new);
+    private WatchService watcher = Try.of(() -> {
+        WatchService watchService = FileSystems.getDefault().newWatchService();
+        log.info("CREATED" + watchService); return watchService;}).getOrElseThrow((Function<Throwable, IllegalStateException>) IllegalStateException::new);
     @NonFinal
     private Future<?> consumer;
     @NonFinal
@@ -41,8 +41,9 @@ public class NioFilesystemWatcher implements FilesystemWatcher {
     @Override
     public void startWatching() {
         Try.of(() -> watchedPath.register(watcher, ALL_WATCH_KINDS)).getOrElseThrow((Function<Throwable, IllegalStateException>) IllegalStateException::new);
-        consumer = consumersExecutor.submit(this::consumeEvents);
-        producer = producersExecutor.submit(this::produceEvents);
+        log.info("STARTED" + watchedPath);
+        consumer = consumersExecutor.submit(() -> consumeEvents());
+        producer = producersExecutor.submit(() -> produceEvents());
     }
 
     @Override
@@ -60,8 +61,11 @@ public class NioFilesystemWatcher implements FilesystemWatcher {
 
     private void produceEvents() {
         while (!Thread.currentThread().isInterrupted()) {
+            log.info("PRODUCE" + watchedPath);
+
             try {
                 WatchKey take = watcher.take();
+                log.info(watchedPath + "PRODUCED " + take);
 
                 for (WatchEvent<?> watchEvent : take.pollEvents()) {
                     if (Thread.currentThread().isInterrupted()) {
@@ -69,7 +73,7 @@ public class NioFilesystemWatcher implements FilesystemWatcher {
                     }
 
                     log.fine(String.format("Found startWatching event = %s", watchEvent));
-                    
+
                     if (watchEvent.kind() == OVERFLOW) {
                         log.severe(String.format("OVERFLOW watchEvent occurred %s times. Operating system queue was overflowed. File events could be lost.", watchEvent.count()));
                         continue;
@@ -98,12 +102,14 @@ public class NioFilesystemWatcher implements FilesystemWatcher {
     }
 
     private void consumeEvents() {
-        try {
-            FilesystemEvent event = blockingQueue.take();
-            log.info("Took " + event);
-            watchedConsumer.accept(event);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                FilesystemEvent event = blockingQueue.take();
+                log.info(watchedPath + "CONSUMED " + event);
+                watchedConsumer.accept(event);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
