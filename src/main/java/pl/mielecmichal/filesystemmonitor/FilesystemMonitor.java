@@ -3,53 +3,47 @@ package pl.mielecmichal.filesystemmonitor;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import lombok.experimental.Wither;
 
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 @Value
 @Builder
-public class FilesystemMonitor implements FilesystemWatcher {
+@Wither
+public class FilesystemMonitor implements FilesystemNotifier {
 
 	private final Path watchedPath;
 	private final Consumer<FilesystemEvent> watchedConsumer;
-	private final FilesystemConstraints watchedConstraints = FilesystemConstraints.DEFAULT;
-	private final LinkedHashSet<FilesystemEvent> readerBuffer = new LinkedHashSet<>();
+	private final FilesystemConstraints watchedConstraints;
 
+	private final BlockingQueue<FilesystemEvent> queue = new ArrayBlockingQueue<>(100000);
 	private final ExecutorService producersExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "filesystem-monitor-producers" + UUID.randomUUID().toString()));
 	private final ExecutorService consumersExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "filesystem-monitor-consumers" + UUID.randomUUID().toString()));
 
 	@NonFinal
-	private FilesystemWatcher watcher;
+	private FilesystemNotifier watcher;
 	@NonFinal
-	private FilesystemWatcher reader;
-	@NonFinal
-	private boolean readerCompleted = false;
+	private FilesystemNotifier reader;
 
 	@Override
 	public void startWatching() {
+		watcher = FilesystemWatcher.builder()
+				.watchedPath(watchedPath)
+				.watchedConstraints(watchedConstraints)
+				.watchedConsumer(watchedConsumer)
+				.producersExecutor(producersExecutor)
+				.consumersExecutor(consumersExecutor)
+				.blockingQueue(queue)
+				.build();
 
-		if(watchedConstraints.isRecursive()) {
-			watcher = RecursiveFilesystemMonitor.builder()
-					.watchedPath(watchedPath)
-					.watchedConstraints(watchedConstraints)
-					.watchedConsumer(this::consumeEvent)
-					.build();
-		} else {
-			watcher = NioFilesystemWatcher.builder()
-					.watchedPath(watchedPath)
-					.watchedConstraints(watchedConstraints)
-					.watchedConsumer(this::consumeEvent)
-					.producersExecutor(producersExecutor)
-					.consumersExecutor(consumersExecutor)
-					.build();
-		}
-
-		reader = NioFilesystemReader.builder()
+		reader = FilesystemReader.builder()
 				.watchedPath(watchedPath)
 				.watchedConstraints(watchedConstraints)
 				.watchedConsumer(this::consumeEvent)
@@ -57,8 +51,6 @@ public class FilesystemMonitor implements FilesystemWatcher {
 
 		watcher.startWatching();
 		reader.startWatching();
-		readerCompleted = true;
-		readerBuffer.forEach(watchedConsumer);
 	}
 
 	@Override
@@ -68,10 +60,10 @@ public class FilesystemMonitor implements FilesystemWatcher {
 	}
 
 	private void consumeEvent(FilesystemEvent event) {
-		if (!readerCompleted) {
-			readerBuffer.add(event);
-			return;
+		try {
+			queue.put(event);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 		}
-		watchedConsumer.accept(event);
 	}
 }
