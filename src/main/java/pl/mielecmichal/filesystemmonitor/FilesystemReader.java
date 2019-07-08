@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 @Log
 @Builder
 @Value
-public class NioFilesystemReader implements FilesystemWatcher {
+public class FilesystemReader implements FilesystemNotifier {
 
     private final Path watchedPath;
     private final FilesystemConstraints watchedConstraints;
