@@ -37,6 +37,7 @@ class SinglePathTest {
         List<FilesystemEvent> receivedEvents = new ArrayList<>();
         FilesystemMonitor monitor = FilesystemMonitor.builder()
                 .watchedPath(temporaryFolder)
+                .watchedConstraints(FilesystemConstraints.DEFAULT)
                 .watchedConsumer(receivedEvents::add)
                 .build();
 
@@ -57,6 +58,7 @@ class SinglePathTest {
         List<FilesystemEvent> receivedEvents = new ArrayList<>();
         FilesystemMonitor monitor = FilesystemMonitor.builder()
                 .watchedPath(temporaryFolder)
+                .watchedConstraints(FilesystemConstraints.DEFAULT)
                 .watchedConsumer(event -> {
                     receivedEvents.add(event);
                     countDownLatch.countDown();
@@ -82,6 +84,7 @@ class SinglePathTest {
         List<FilesystemEvent> receivedEvents = new ArrayList<>();
         FilesystemMonitor monitor = FilesystemMonitor.builder()
                 .watchedPath(temporaryFolder)
+                .watchedConstraints(FilesystemConstraints.DEFAULT)
                 .watchedConsumer(event -> {
                     receivedEvents.add(event);
                     latch.countDown();
@@ -111,6 +114,7 @@ class SinglePathTest {
         List<FilesystemEvent> receivedEvents = new ArrayList<>();
         FilesystemMonitor monitor = FilesystemMonitor.builder()
                 .watchedPath(temporaryFolder)
+                .watchedConstraints(FilesystemConstraints.DEFAULT)
                 .watchedConsumer(event -> {
                     System.out.println(event);
                     receivedEvents.add(event);
