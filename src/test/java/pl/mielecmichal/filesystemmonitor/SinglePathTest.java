@@ -16,13 +16,12 @@ import pl.mielecmichal.filesystemmonitor.utilities.Filesystem;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static pl.mielecmichal.filesystemmonitor.Constants.TEST_TIMEOUT;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEvent.FilesystemEventType.*;
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SinglePathTest {
@@ -31,21 +30,25 @@ class SinglePathTest {
     Path temporaryFolder;
 
     @Test
-    void shouldReadInitialFile() {
+    void shouldReadInitialFile() throws InterruptedException {
         //given
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         Path testFile = Filesystem.createFile(temporaryFolder, "test.txt");
         List<FilesystemEvent> receivedEvents = new ArrayList<>();
         FilesystemMonitor monitor = FilesystemMonitor.builder()
                 .watchedPath(temporaryFolder)
                 .watchedConstraints(FilesystemConstraints.DEFAULT)
-                .watchedConsumer(receivedEvents::add)
+                .watchedConsumer(filesystemEvent -> {
+                    receivedEvents.add(filesystemEvent);
+                    countDownLatch.countDown();
+                })
                 .build();
 
         //when
         monitor.startWatching();
+        countDownLatch.await(TEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
 
         //then
-        Assertions.assertThat(receivedEvents).hasSize(1);
         Assertions.assertThat(receivedEvents).containsExactly(
                 FilesystemEvent.of(INITIAL, testFile)
         );
@@ -116,7 +119,6 @@ class SinglePathTest {
                 .watchedPath(temporaryFolder)
                 .watchedConstraints(FilesystemConstraints.DEFAULT)
                 .watchedConsumer(event -> {
-                    System.out.println(event);
                     receivedEvents.add(event);
                     latch.countDown();
                 })
