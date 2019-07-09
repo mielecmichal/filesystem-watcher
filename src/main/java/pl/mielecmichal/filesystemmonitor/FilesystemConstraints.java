@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.DELETED;
+
 @Value
 @Builder
 @Wither
@@ -43,7 +45,7 @@ public class FilesystemConstraints implements Predicate<FilesystemEvent> {
     @Override
     public boolean test(FilesystemEvent event) {
         Path path = event.getPath();
-        if (event.getEventType() != FilesystemEvent.FilesystemEventType.DELETED && !fileTypes.isEmpty()) {
+        if (!fileTypes.isEmpty() && event.getEventType() != DELETED) {
             BasicFileAttributes fileAttributes = readAttributes(path);
             if (fileTypes.stream().noneMatch(fileType -> fileType.predicate.test(fileAttributes))) {
                 return false;
