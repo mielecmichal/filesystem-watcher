@@ -7,6 +7,6 @@ import java.time.Duration;
 @UtilityClass
 class Constants {
 
-    static final Duration TEST_TIMEOUT = Duration.ofMillis(1000);
+    static final Duration TEST_TIMEOUT = Duration.ofMillis(100);
 
 }
