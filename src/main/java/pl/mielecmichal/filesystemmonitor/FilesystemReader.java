@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.extern.java.Log;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -13,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-@Log
+@Slf4j
 @Builder
 @Value
 public class FilesystemReader implements FilesystemNotifier {
@@ -73,7 +74,7 @@ public class FilesystemReader implements FilesystemNotifier {
 
         private void addFilesystemEvent(Path path) {
             FilesystemEvent filesystemEvent = FilesystemEvent.builder()
-                    .eventType(FilesystemEvent.FilesystemEventType.INITIAL)
+                    .eventType(FilesystemEventType.INITIAL)
                     .path(path)
                     .build();
 
