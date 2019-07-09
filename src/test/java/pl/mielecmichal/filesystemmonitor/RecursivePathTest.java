@@ -25,7 +25,7 @@ class RecursivePathTest {
 
 	@ParameterizedTest
 	@EnumSource(ModificationKind.class)
-	void shouldWatchRecursiveFiles(ModificationKind modificationKind, @TempDir Path temporaryDirectory) throws InterruptedException {
+	void shouldWatchModifiedFile(ModificationKind modificationKind, @TempDir Path temporaryDirectory) throws InterruptedException {
 		//given
 		Path recursive = Filesystem.createDirectory(temporaryDirectory, "recursive");
 		Path recursiveFile = Filesystem.createFile(recursive, "recursive.txt");
