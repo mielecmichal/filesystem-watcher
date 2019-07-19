@@ -1,7 +1,7 @@
 package pl.mielecmichal.filesystemmonitor.parameters;
 
 import lombok.RequiredArgsConstructor;
-import pl.mielecmichal.filesystemmonitor.utilities.Filesystem;
+import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
 
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
@@ -23,24 +23,24 @@ public enum ModificationKind implements Consumer<Path> {
 	}
 
 	private static void addPermission(Path path) {
-		Set<PosixFilePermission> permissions = Filesystem.getPosixFilePermissions(path);
+		Set<PosixFilePermission> permissions = FilesystemUtils.getPosixFilePermissions(path);
 		permissions.add(PosixFilePermission.OTHERS_EXECUTE);
-		Filesystem.setPosixFilePermissions(path, permissions);
+		FilesystemUtils.setPosixFilePermissions(path, permissions);
 	}
 
 	private static void removePermission(Path path) {
-		Set<PosixFilePermission> permissions = Filesystem.getPosixFilePermissions(path);
+		Set<PosixFilePermission> permissions = FilesystemUtils.getPosixFilePermissions(path);
 		PosixFilePermission toRemove = permissions.stream()
 				.filter(permission -> !permission.toString().startsWith("OWNER"))
 				.findAny()
 				.orElseThrow(() -> new IllegalArgumentException(String.format("Cannot remove POSIX attribute, because given path=%s have all them set to false", path)));
 		permissions.remove(toRemove);
-		Filesystem.setPosixFilePermissions(path, permissions);
+		FilesystemUtils.setPosixFilePermissions(path, permissions);
 	}
 
 	private static void setSamePermissions(Path path) {
-		Set<PosixFilePermission> permissions = Filesystem.getPosixFilePermissions(path);
-		Filesystem.setPosixFilePermissions(path, permissions);
+		Set<PosixFilePermission> permissions = FilesystemUtils.getPosixFilePermissions(path);
+		FilesystemUtils.setPosixFilePermissions(path, permissions);
 	}
 
 }

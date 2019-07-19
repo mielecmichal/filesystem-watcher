@@ -6,7 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import pl.mielecmichal.filesystemmonitor.parameters.ModificationKind;
-import pl.mielecmichal.filesystemmonitor.utilities.Filesystem;
+import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -25,8 +25,8 @@ class RecursivePathTest {
     @EnumSource(ModificationKind.class)
     void shouldWatchModifiedFile(ModificationKind modificationKind, @TempDir Path temporaryDirectory) throws InterruptedException {
         //given
-        Path recursive = Filesystem.createDirectory(temporaryDirectory, "recursive");
-        Path recursiveFile = Filesystem.createFile(recursive, "recursive.txt");
+        Path recursive = FilesystemUtils.createDirectory(temporaryDirectory, "recursive");
+        Path recursiveFile = FilesystemUtils.createFile(recursive, "recursive.txt");
 
         //when
         CountDownLatch countDownLatch = new CountDownLatch(3);
