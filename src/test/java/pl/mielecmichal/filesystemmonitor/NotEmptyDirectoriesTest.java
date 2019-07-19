@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 
 import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
-class RecursivePathTest {
+class NotEmptyDirectoriesTest {
 
 	@ParameterizedTest
 	@MethodSource
