@@ -11,28 +11,28 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 @Value
-public class Filesystem {
+public class FilesystemUtils {
 
     private final Path temporaryFolder;
 
     public static void deleteFile(Path path) {
-        TryIO.with(() -> Files.deleteIfExists(path)).get();
+        TryIO.with(() -> Files.deleteIfExists(path));
     }
 
     public static Path createDirectory(Path path, String name) {
-        return TryIO.with(() -> Files.createDirectory(path.resolve(name))).get();
+        return TryIO.with(() -> Files.createDirectory(path.resolve(name)));
     }
 
     public static Path createFile(Path path, String name) {
-        return TryIO.with(() -> Files.createFile(path.resolve(name))).get();
+        return TryIO.with(() -> Files.createFile(path.resolve(name)));
     }
 
     public static Set<PosixFilePermission> getPosixFilePermissions(Path path) {
-        return TryIO.with(() -> Files.getPosixFilePermissions(path)).get();
+        return TryIO.with(() -> Files.getPosixFilePermissions(path));
     }
 
     public static Path setPosixFilePermissions(Path path, Set<PosixFilePermission> permissions) {
-        return TryIO.with(() -> Files.setPosixFilePermissions(path, permissions)).get();
+        return TryIO.with(() -> Files.setPosixFilePermissions(path, permissions));
     }
 
     static class TryIO {
@@ -42,14 +42,15 @@ public class Filesystem {
             T apply() throws IOException;
         }
 
-        static <T> Supplier<T> with(ThrowingSupplier<T> throwingSupplier) {
-            return () -> {
+        static <T> T with(ThrowingSupplier<T> throwingSupplier) {
+            Supplier<T> supplier = () -> {
                 try {
                     return throwingSupplier.apply();
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
             };
+            return supplier.get();
         }
     }
 }
