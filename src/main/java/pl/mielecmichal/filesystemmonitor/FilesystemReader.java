@@ -3,16 +3,20 @@ package pl.mielecmichal.filesystemmonitor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.*;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
 @Slf4j
 @Builder
@@ -73,10 +77,7 @@ public class FilesystemReader implements FilesystemNotifier {
         }
 
         private void addFilesystemEvent(Path path) {
-            FilesystemEvent filesystemEvent = FilesystemEvent.builder()
-                    .eventType(FilesystemEventType.INITIAL)
-                    .path(path)
-                    .build();
+            FilesystemEvent filesystemEvent = FilesystemEvent.of(path, INITIAL);
 
             if (constraints.test(filesystemEvent)) {
                 events.add(filesystemEvent);

@@ -49,9 +49,7 @@ class SinglePathTest {
         countDownLatch.await(TEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
 
         //then
-        Assertions.assertThat(receivedEvents).containsExactly(
-                FilesystemEvent.of(INITIAL, testFile)
-        );
+        Assertions.assertThat(receivedEvents).containsExactly(FilesystemEvent.of(testFile, INITIAL));
     }
 
     @Test

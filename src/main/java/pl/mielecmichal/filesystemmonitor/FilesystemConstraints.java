@@ -64,9 +64,7 @@ public class FilesystemConstraints implements Predicate<FilesystemEvent> {
                 return false;
             }
         }
-
         return true;
-
     }
 
     private BasicFileAttributes readAttributes(Path path) {
