@@ -1,57 +1,60 @@
 package pl.mielecmichal.filesystemmonitor;
 
-import lombok.extern.slf4j.Slf4j;
+import io.vavr.collection.Array;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import pl.mielecmichal.filesystemmonitor.parameters.ModificationStrategy;
-import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
+import pl.mielecmichal.filesystemmonitor.parameters.PathKind;
+import pl.mielecmichal.filesystemmonitor.utilities.AwaitilityUtils;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static pl.mielecmichal.filesystemmonitor.Constants.TEST_TIMEOUT;
 import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.MODIFIED;
 
-@Slf4j
 class RecursivePathTest {
 
-    @ParameterizedTest
-    @EnumSource(ModificationStrategy.class)
-    void shouldWatchModifiedFile(ModificationStrategy modificationStrategy, @TempDir Path temporaryDirectory) throws InterruptedException {
-        //given
-        Path recursive = FilesystemUtils.createDirectory(temporaryDirectory, "recursive");
-        Path recursiveFile = FilesystemUtils.createFile(recursive, "recursive.txt");
+	@ParameterizedTest
+	@MethodSource
+	void shouldWatchModifiedFile(PathKind pathKind, ModificationStrategy strategy, @TempDir Path temporaryDirectory) throws InterruptedException {
+		//given
+		List<Path> recursivePaths = pathKind.apply(temporaryDirectory);
+		Path recursivePath = recursivePaths.get(recursivePaths.size() - 1);
 
-        //when
-        CountDownLatch countDownLatch = new CountDownLatch(3);
-        List<FilesystemEvent> receivedEvents = new ArrayList<>();
-        FilesystemNotifier monitor = FilesystemMonitor.builder()
-                .watchedPath(temporaryDirectory)
-                .watchedConstraints(FilesystemConstraints.DEFAULT.withRecursive(true))
-                .watchedConsumer(event -> {
-                    receivedEvents.add(event);
-                    countDownLatch.countDown();
-                })
-                .build();
+		//when
+		List<FilesystemEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
+		FilesystemNotifier monitor = FilesystemMonitor.builder()
+				.watchedPath(temporaryDirectory)
+				.watchedConstraints(FilesystemConstraints.DEFAULT.withRecursive(true))
+				.watchedConsumer(receivedEvents::add)
+				.build();
 
-        //when
-        monitor.startWatching();
-        Thread.sleep(100);
-        modificationStrategy.accept(recursiveFile);
+		//when
+		monitor.startWatching();
+		//TODO Monitor should initialize recursive directory watchers if possible before exiting from startWatching method.
+		Thread.sleep(100);
+		Path modifiedPath = strategy.apply(recursivePath);
 
-        countDownLatch.await(TEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+		//then
+		AwaitilityUtils.awaitForSize(receivedEvents, pathKind.getNumberOfPaths() + 1);
+		Stream<FilesystemEvent> initial = recursivePaths.stream().map(path -> FilesystemEvent.of(path, INITIAL));
+		Stream<FilesystemEvent> modified = Stream.of(FilesystemEvent.of(modifiedPath, strategy.getExpectedEvent()));
+		List<FilesystemEvent> expected = Stream.concat(initial, modified).collect(Collectors.toList());
+		Assertions.assertThat(receivedEvents).containsExactlyInAnyOrderElementsOf(expected);
+	}
 
-        //then
-        Assertions.assertThat(receivedEvents).contains(
-                FilesystemEvent.of(recursive, INITIAL),
-                FilesystemEvent.of(recursiveFile, INITIAL),
-                FilesystemEvent.of(recursiveFile, MODIFIED)
-        );
-    }
+	private static Stream<Arguments> shouldWatchModifiedFile() {
+		Array<ModificationStrategy> modificationStrategies = Array.of(ModificationStrategy.values());
+		Array<PathKind> pathKinds = Array.of(PathKind.values());
+
+		var arguments = pathKinds.crossProduct(modificationStrategies);
+		return arguments.toJavaStream().map(tuple -> Arguments.of(tuple._1(), tuple._2()));
+	}
 }

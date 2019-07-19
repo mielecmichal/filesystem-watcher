@@ -10,11 +10,8 @@ import java.util.List;
 
 class EmptyDirectoryTest {
 
-	@TempDir
-	Path temporaryFolder;
-
 	@Test
-	void shouldNotEmitAnyEvents() {
+	void shouldNotEmitAnyEvents(@TempDir Path temporaryFolder) {
 		//given
 		List<FilesystemEvent> receivedEvents = new ArrayList<>();
 		FilesystemMonitor monitor = FilesystemMonitor.builder()
