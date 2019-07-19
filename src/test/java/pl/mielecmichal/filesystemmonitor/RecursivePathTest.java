@@ -5,7 +5,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import pl.mielecmichal.filesystemmonitor.parameters.ModificationKind;
+import pl.mielecmichal.filesystemmonitor.parameters.ModificationStrategy;
 import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
 
 import java.nio.file.Path;
@@ -22,8 +22,8 @@ import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.MODIFIED;
 class RecursivePathTest {
 
     @ParameterizedTest
-    @EnumSource(ModificationKind.class)
-    void shouldWatchModifiedFile(ModificationKind modificationKind, @TempDir Path temporaryDirectory) throws InterruptedException {
+    @EnumSource(ModificationStrategy.class)
+    void shouldWatchModifiedFile(ModificationStrategy modificationStrategy, @TempDir Path temporaryDirectory) throws InterruptedException {
         //given
         Path recursive = FilesystemUtils.createDirectory(temporaryDirectory, "recursive");
         Path recursiveFile = FilesystemUtils.createFile(recursive, "recursive.txt");
@@ -43,7 +43,7 @@ class RecursivePathTest {
         //when
         monitor.startWatching();
         Thread.sleep(100);
-        modificationKind.accept(recursiveFile);
+        modificationStrategy.accept(recursiveFile);
 
         countDownLatch.await(TEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
 

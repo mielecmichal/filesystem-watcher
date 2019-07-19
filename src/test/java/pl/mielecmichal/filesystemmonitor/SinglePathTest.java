@@ -8,7 +8,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import pl.mielecmichal.filesystemmonitor.parameters.ModificationKind;
+import pl.mielecmichal.filesystemmonitor.parameters.ModificationStrategy;
 import pl.mielecmichal.filesystemmonitor.parameters.PathKind;
 import pl.mielecmichal.filesystemmonitor.utilities.AwaitilityUtils;
 import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
@@ -23,16 +23,8 @@ import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.*;
 
 class SinglePathTest {
 
-    private static Stream<Arguments> shouldWatchModifiedFile() {
-        Array<ModificationKind> modificationStrategies = Array.of(ModificationKind.values());
-        Array<PathKind> pathKinds = Array.of(PathKind.values());
-
-        var arguments = pathKinds.crossProduct(modificationStrategies);
-        return arguments.toJavaStream().map(tuple -> Arguments.of(tuple._1(), tuple._2()));
-    }
-
     @Test
-    void shouldReadInitialFile(@TempDir Path temporaryFolder) throws InterruptedException {
+    void shouldReadInitialFile(@TempDir Path temporaryFolder) {
         //given
         List<FilesystemEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
         Path testFile = FilesystemUtils.createFile(temporaryFolder, "test.txt");
@@ -51,7 +43,7 @@ class SinglePathTest {
     }
 
     @Test
-    void shouldWatchCreatedFile(@TempDir Path temporaryFolder) throws InterruptedException {
+    void shouldWatchCreatedFile(@TempDir Path temporaryFolder) {
         //given
         List<FilesystemEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
         FilesystemMonitor monitor = FilesystemMonitor.builder()
@@ -70,7 +62,7 @@ class SinglePathTest {
     }
 
     @Test
-    void shouldWatchDeletedFile(@TempDir Path temporaryFolder) throws InterruptedException {
+    void shouldWatchDeletedFile(@TempDir Path temporaryFolder) {
         //given
         List<FilesystemEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
 
@@ -95,7 +87,7 @@ class SinglePathTest {
 
     @ParameterizedTest
     @MethodSource
-    void shouldWatchModifiedFile(PathKind pathKind, ModificationKind strategy, @TempDir Path temporaryFolder) throws InterruptedException {
+    void shouldWatchModifiedFile(PathKind pathKind, ModificationStrategy modificationStrategy, @TempDir Path temporaryFolder) {
         //given
         List<FilesystemEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
         Path path = pathKind.apply(temporaryFolder);
@@ -106,7 +98,7 @@ class SinglePathTest {
                 .build();
         //when
         monitor.startWatching();
-        strategy.accept(path);
+        modificationStrategy.accept(path);
 
         //then
         AwaitilityUtils.awaitForSize(receivedEvents, 2);
@@ -114,5 +106,13 @@ class SinglePathTest {
                 FilesystemEvent.of(path, INITIAL),
                 FilesystemEvent.of(path, MODIFIED)
         );
+    }
+
+    private static Stream<Arguments> shouldWatchModifiedFile() {
+        Array<ModificationStrategy> modificationStrategies = Array.of(ModificationStrategy.values());
+        Array<PathKind> pathKinds = Array.of(PathKind.values());
+
+        var arguments = pathKinds.crossProduct(modificationStrategies);
+        return arguments.toJavaStream().map(tuple -> Arguments.of(tuple._1(), tuple._2()));
     }
 }
