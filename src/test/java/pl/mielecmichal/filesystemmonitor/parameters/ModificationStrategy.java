@@ -9,11 +9,11 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @RequiredArgsConstructor
-public enum ModificationKind implements Consumer<Path> {
+public enum ModificationStrategy implements Consumer<Path> {
 
-	ADD_POSIX_PERMISSION(ModificationKind::addPermission),
-	REMOVE_POSIX_PERMISSION(ModificationKind::removePermission),
-	SET_SAME_PERMISSIONS(ModificationKind::setSamePermissions);
+	ADD_POSIX_PERMISSION(ModificationStrategy::addPermission),
+	REMOVE_POSIX_PERMISSION(ModificationStrategy::removePermission),
+	SET_SAME_PERMISSIONS(ModificationStrategy::setSamePermissions);
 
 	private final Consumer<Path> fileModifier;
 
