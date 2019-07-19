@@ -15,8 +15,9 @@ public class FilesystemUtils {
 
     private final Path temporaryFolder;
 
-    public static void deleteFile(Path path) {
+    public static Path delete(Path path) {
         TryIO.with(() -> Files.deleteIfExists(path));
+        return path;
     }
 
     public static Path createDirectory(Path path, String name) {
