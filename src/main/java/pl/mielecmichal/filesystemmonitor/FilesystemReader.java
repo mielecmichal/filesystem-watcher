@@ -20,7 +20,6 @@ import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
 @Slf4j
 @Builder
-@Value
 public class FilesystemReader implements FilesystemNotifier {
 
     private final Path watchedPath;
