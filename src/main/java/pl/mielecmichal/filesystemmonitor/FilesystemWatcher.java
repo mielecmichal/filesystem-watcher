@@ -6,7 +6,14 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.*;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.nio.file.Watchable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -16,12 +23,16 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static java.nio.file.StandardWatchEventKinds.*;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.*;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.CREATED;
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.DELETED;
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
 @Slf4j
 @Builder
-@Value
 public class FilesystemWatcher implements FilesystemNotifier {
 
     private final WatchableUtility watchableUtility = new WatchableUtility();
