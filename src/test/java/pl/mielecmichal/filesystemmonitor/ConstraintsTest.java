@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import pl.mielecmichal.filesystemmonitor.utilities.AwaitilityUtils;
 import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
 
 import java.nio.file.Path;
@@ -83,7 +84,7 @@ class ConstraintsTest {
 
 	@ParameterizedTest
 	@MethodSource
-	void shouldFindProperFilesForCorrectConstraints(FilesystemConstraints constraints, List<Path> expectedPaths) throws InterruptedException {
+	void shouldFindProperFilesForCorrectConstraints(FilesystemConstraints constraints, List<Path> expectedPaths) {
 		List<FilesystemEvent> receivedEvents = new ArrayList<>();
 
 		FilesystemMonitor monitor = FilesystemMonitor.builder()
@@ -93,12 +94,12 @@ class ConstraintsTest {
 				.build();
 
 		monitor.startWatching();
-		Thread.sleep(100);
 
-		List<FilesystemEvent> notRecursive = expectedPaths.stream()
+		List<FilesystemEvent> expectedEvents = expectedPaths.stream()
 				.map(path -> FilesystemEvent.of(path, FilesystemEventType.INITIAL))
 				.collect(Collectors.toList());
-		Assertions.assertThat(receivedEvents).containsExactlyInAnyOrderElementsOf(notRecursive);
+		AwaitilityUtils.awaitForSize(receivedEvents, expectedEvents.size());
+		Assertions.assertThat(receivedEvents).containsExactlyInAnyOrderElementsOf(expectedEvents);
 	}
 
 	private static Stream<Arguments> shouldFindProperFilesForCorrectConstraints() {
