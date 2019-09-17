@@ -13,9 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-@Value
 @Builder
-@Wither
 public class FilesystemMonitor implements FilesystemNotifier {
 
 	private final Path watchedPath;
