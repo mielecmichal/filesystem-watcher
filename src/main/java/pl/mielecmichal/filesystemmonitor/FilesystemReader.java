@@ -63,7 +63,7 @@ public class FilesystemReader implements FilesystemNotifier {
             addFilesystemEvent(dir);
 
             if (!constraints.isRecursive()) {
-                return FileVisitResult.TERMINATE;
+                return FileVisitResult.CONTINUE;
             }
 
             return FileVisitResult.CONTINUE;

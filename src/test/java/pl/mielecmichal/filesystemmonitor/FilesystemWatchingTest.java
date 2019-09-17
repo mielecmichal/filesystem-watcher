@@ -2,6 +2,7 @@ package pl.mielecmichal.filesystemmonitor;
 
 import io.vavr.collection.Array;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -19,7 +20,23 @@ import java.util.stream.Stream;
 
 import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
-class NotEmptyDirectoriesTest {
+class FilesystemWatchingTest {
+
+	@Test
+	void shouldNotEmitEventsForEmptyDirectory(@TempDir Path temporaryFolder) {
+		//given
+		List<FilesystemEvent> receivedEvents = new ArrayList<>();
+		FilesystemMonitor monitor = FilesystemMonitor.builder()
+				.watchedPath(temporaryFolder)
+				.watchedConsumer(receivedEvents::add)
+				.build();
+
+		//when
+		monitor.startWatching();
+
+		//then
+		Assertions.assertThat(receivedEvents).isEmpty();
+	}
 
 	@ParameterizedTest
 	@MethodSource
