@@ -21,7 +21,6 @@ import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.*;
 
 @Slf4j
 @Builder
-@Value
 public class FilesystemWatcher implements FilesystemNotifier {
 
     private final WatchableUtility watchableUtility = new WatchableUtility();
