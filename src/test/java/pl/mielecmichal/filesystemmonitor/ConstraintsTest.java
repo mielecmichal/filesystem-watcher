@@ -9,27 +9,39 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class ConstraintsTest {
 
-	private static class ConstraintTestSetuper {
+	private static class ConstraintTestSetup {
 
 		final List<Path> all;
+		private final Path firstDirectory;
+		private final Path secondDirectory;
+		private final Path thirdDirectory;
+		private final Path firstFile;
+		private final Path secondFile;
+		private final Path thirdFile;
+		private final Path recursive;
+		private final Path firstRecursiveDirectory;
+		private final Path secondRecursiveDirectory;
+		private final Path firstRecursiveFile;
+		private final Path secondRecursiveFile;
 
-		ConstraintTestSetuper(Path temporaryDirectory) {
-			Path firstDirectory = FilesystemUtils.createDirectory(temporaryDirectory, "first_directory");
-			Path secondDirectory = FilesystemUtils.createDirectory(temporaryDirectory, "second_directory");
-			Path thirdDirectory = FilesystemUtils.createDirectory(temporaryDirectory, "third_directory");
-			Path firstFile = FilesystemUtils.createFile(temporaryDirectory, "firstFile.txt");
-			Path secondFile = FilesystemUtils.createFile(temporaryDirectory, "secondFile.txt");
-			Path thirdFile = FilesystemUtils.createFile(temporaryDirectory, "thirdFile.txt");
+		ConstraintTestSetup(Path temporaryDirectory) {
+			firstDirectory = FilesystemUtils.createDirectory(temporaryDirectory, "first_directory");
+			secondDirectory = FilesystemUtils.createDirectory(temporaryDirectory, "second_directory");
+			thirdDirectory = FilesystemUtils.createDirectory(temporaryDirectory, "third_directory");
+			firstFile = FilesystemUtils.createFile(temporaryDirectory, "firstFile.txt");
+			secondFile = FilesystemUtils.createFile(temporaryDirectory, "secondFile.txt");
+			thirdFile = FilesystemUtils.createFile(temporaryDirectory, "thirdFile.txt");
 
-			Path recursive = FilesystemUtils.createDirectory(temporaryDirectory, "recursive_directory");
-			Path firstRecursiveDirectory = FilesystemUtils.createDirectory(recursive, "first_recursive_directory");
-			Path secondRecursiveDirectory = FilesystemUtils.createDirectory(recursive, "second_recursive_directory");
+			recursive = FilesystemUtils.createDirectory(temporaryDirectory, "recursive_directory");
+			firstRecursiveDirectory = FilesystemUtils.createDirectory(recursive, "first_recursive_directory");
+			secondRecursiveDirectory = FilesystemUtils.createDirectory(recursive, "second_recursive_directory");
 
-			Path firstRecursiveFile = FilesystemUtils.createFile(recursive, "firstFile.txt");
-			Path secondRecursiveFile = FilesystemUtils.createFile(recursive, "secondFile.txt");
+			firstRecursiveFile = FilesystemUtils.createFile(recursive, "firstFile.txt");
+			secondRecursiveFile = FilesystemUtils.createFile(recursive, "secondFile.txt");
 
 			this.all = List.of(firstDirectory,
 					secondDirectory,
@@ -48,7 +60,7 @@ class ConstraintsTest {
 
 	@Test
 	void shouldFindProperFilesForCorrectConstraints(@TempDir Path temporaryDirectory) throws InterruptedException {
-		ConstraintTestSetuper constraintTestSetuper = new ConstraintTestSetuper(temporaryDirectory);
+		ConstraintTestSetup setup = new ConstraintTestSetup(temporaryDirectory);
 		List<FilesystemEvent> receivedEvents = new ArrayList<>();
 
 		FilesystemMonitor monitor = FilesystemMonitor.builder()
@@ -60,7 +72,11 @@ class ConstraintsTest {
 		monitor.startWatching();
 		Thread.sleep(2000);
 
-		List<FilesystemEvent> all = constraintTestSetuper.all.stream().map(path -> FilesystemEvent.of(path, FilesystemEventType.INITIAL)).collect(Collectors.toList());
-		Assertions.assertThat(receivedEvents).containsAll(all);
+		List<FilesystemEvent> notRecursive = Stream.of(
+				setup.firstFile, setup.secondFile, setup.thirdFile,
+				setup.firstDirectory, setup.secondDirectory, setup.thirdDirectory, setup.recursive)
+				.map(path -> FilesystemEvent.of(path, FilesystemEventType.INITIAL))
+				.collect(Collectors.toList());
+		Assertions.assertThat(receivedEvents).containsExactlyInAnyOrderElementsOf(notRecursive);
 	}
 }
