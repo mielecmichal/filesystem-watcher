@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-class FilesystemConstraintsTest {
+class ConstraintsTest {
 
 	private static class ConstraintTestSetuper {
 

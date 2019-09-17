@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
-class FilesystemWatchingTest {
+class WatchingTest {
 
 	@Test
 	void shouldNotEmitEventsForEmptyDirectory(@TempDir Path temporaryFolder) {
