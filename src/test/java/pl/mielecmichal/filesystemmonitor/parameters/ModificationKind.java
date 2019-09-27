@@ -12,13 +12,13 @@ import java.util.Set;
 import java.util.function.Function;
 
 @RequiredArgsConstructor
-public enum ModificationStrategy implements Function<Path, Path> {
+public enum ModificationKind implements Function<Path, Path> {
 
-	ADD_POSIX_PERMISSION(ModificationStrategy::addPermission, FilesystemEventType.MODIFIED),
-	REMOVE_POSIX_PERMISSION(ModificationStrategy::removePermission, FilesystemEventType.MODIFIED),
-	SET_SAME_PERMISSIONS(ModificationStrategy::setSamePermissions, FilesystemEventType.MODIFIED),
+	ADD_POSIX_PERMISSION(ModificationKind::addPermission, FilesystemEventType.MODIFIED),
+	REMOVE_POSIX_PERMISSION(ModificationKind::removePermission, FilesystemEventType.MODIFIED),
+	SET_SAME_PERMISSIONS(ModificationKind::setSamePermissions, FilesystemEventType.MODIFIED),
 	DELETE(FilesystemUtils::delete, FilesystemEventType.DELETED),
-	CREATE_FILE(ModificationStrategy::createFile, FilesystemEventType.CREATED);
+	CREATE_FILE(ModificationKind::createFile, FilesystemEventType.CREATED);
 
 	private final Function<Path, Path> fileModifier;
 	@Getter

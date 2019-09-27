@@ -7,7 +7,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import pl.mielecmichal.filesystemmonitor.parameters.ModificationStrategy;
+import pl.mielecmichal.filesystemmonitor.parameters.ModificationKind;
 import pl.mielecmichal.filesystemmonitor.parameters.PathKind;
 import pl.mielecmichal.filesystemmonitor.utilities.AwaitilityUtils;
 
@@ -22,56 +22,56 @@ import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
 class WatchingTest {
 
-	@Test
-	void shouldNotEmitEventsForEmptyDirectory(@TempDir Path temporaryFolder) {
-		//given
-		List<FilesystemEvent> receivedEvents = new ArrayList<>();
-		FilesystemMonitor monitor = FilesystemMonitor.builder()
-				.watchedPath(temporaryFolder)
-				.watchedConsumer(receivedEvents::add)
-				.build();
+    private static Stream<Arguments> shouldWatchModifiedFile() {
+        Array<PathKind> pathKinds = Array.of(PathKind.values());
+        Array<ModificationKind> modificationKinds = Array.of(ModificationKind.values());
 
-		//when
-		monitor.startWatching();
+        var arguments = pathKinds.crossProduct(modificationKinds);
+        return arguments.toJavaStream().map(tuple -> Arguments.of(tuple._1(), tuple._2()));
+    }
 
-		//then
-		Assertions.assertThat(receivedEvents).isEmpty();
-	}
+    @Test
+    void shouldNotEmitEventsForEmptyDirectory(@TempDir Path temporaryFolder) {
+        //given
+        List<FilesystemEvent> receivedEvents = new ArrayList<>();
+        FilesystemMonitor monitor = FilesystemMonitor.builder()
+                .watchedPath(temporaryFolder)
+                .watchedConsumer(receivedEvents::add)
+                .build();
 
-	@ParameterizedTest
-	@MethodSource
-	void shouldWatchModifiedFile(PathKind pathKind, ModificationStrategy strategy, @TempDir Path temporaryDirectory) throws InterruptedException {
-		//given
-		List<Path> recursivePaths = pathKind.apply(temporaryDirectory);
-		Path recursivePath = recursivePaths.get(recursivePaths.size() - 1);
+        //when
+        monitor.startWatching();
 
-		//when
-		List<FilesystemEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
-		FilesystemNotifier monitor = FilesystemMonitor.builder()
-				.watchedPath(temporaryDirectory)
-				.watchedConstraints(FilesystemConstraints.DEFAULT.withRecursive(true))
-				.watchedConsumer(receivedEvents::add)
-				.build();
+        //then
+        Assertions.assertThat(receivedEvents).isEmpty();
+    }
 
-		//when
-		monitor.startWatching();
-		//TODO Monitor should initialize recursive directory watchers if possible before exiting from startWatching method.
-		Thread.sleep(100);
-		Path modifiedPath = strategy.apply(recursivePath);
+    @ParameterizedTest
+    @MethodSource
+    void shouldWatchModifiedFile(PathKind pathKind, ModificationKind strategy, @TempDir Path temporaryDirectory) throws InterruptedException {
+        //given
+        PathKind.PathScenario setup = pathKind.apply(temporaryDirectory);
+        Path testedPath = setup.getTestedPath();
 
-		//then
-		AwaitilityUtils.awaitForSize(receivedEvents, pathKind.getNumberOfPaths() + 1);
-		Stream<FilesystemEvent> initial = recursivePaths.stream().map(path -> FilesystemEvent.of(path, INITIAL));
-		Stream<FilesystemEvent> modified = Stream.of(FilesystemEvent.of(modifiedPath, strategy.getExpectedEvent()));
-		List<FilesystemEvent> expected = Stream.concat(initial, modified).collect(Collectors.toList());
-		Assertions.assertThat(receivedEvents).containsExactlyInAnyOrderElementsOf(expected);
-	}
+        //when
+        List<FilesystemEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
+        FilesystemNotifier monitor = FilesystemMonitor.builder()
+                .watchedPath(temporaryDirectory)
+                .watchedConstraints(FilesystemConstraints.DEFAULT.withRecursive(true))
+                .watchedConsumer(receivedEvents::add)
+                .build();
 
-	private static Stream<Arguments> shouldWatchModifiedFile() {
-		Array<ModificationStrategy> modificationStrategies = Array.of(ModificationStrategy.values());
-		Array<PathKind> pathKinds = Array.of(PathKind.values());
+        //when
+        monitor.startWatching();
+        //TODO Monitor should initialize recursive directory watchers if possible before exiting from startWatching method.
+        Thread.sleep(100);
+        strategy.apply(testedPath);
 
-		var arguments = pathKinds.crossProduct(modificationStrategies);
-		return arguments.toJavaStream().map(tuple -> Arguments.of(tuple._1(), tuple._2()));
-	}
+        //then
+        AwaitilityUtils.awaitForSize(receivedEvents, setup.getAllPaths().size() + 1);
+        Stream<FilesystemEvent> initial = setup.getAllPaths().stream().map(path -> FilesystemEvent.of(path, INITIAL));
+        Stream<FilesystemEvent> modified = Stream.of(FilesystemEvent.of(setup.getSubjectPath(), strategy.getExpectedEvent()));
+        List<FilesystemEvent> expected = Stream.concat(initial, modified).collect(Collectors.toList());
+        Assertions.assertThat(receivedEvents).containsExactlyInAnyOrderElementsOf(expected);
+    }
 }
