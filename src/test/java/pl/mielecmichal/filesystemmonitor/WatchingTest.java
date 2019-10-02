@@ -1,6 +1,7 @@
 package pl.mielecmichal.filesystemmonitor;
 
 import io.vavr.collection.Array;
+import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -13,22 +14,19 @@ import pl.mielecmichal.filesystemmonitor.utilities.AwaitilityUtils;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.CREATED;
 import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
+@Slf4j
 class WatchingTest {
-
-    private static Stream<Arguments> shouldWatchModifiedFile() {
-        Array<PathKind> pathKinds = Array.of(PathKind.values());
-        Array<ModificationKind> modificationKinds = Array.of(ModificationKind.values());
-
-        var arguments = pathKinds.crossProduct(modificationKinds);
-        return arguments.toJavaStream().map(tuple -> Arguments.of(tuple._1(), tuple._2()));
-    }
 
     @Test
     void shouldNotEmitEventsForEmptyDirectory(@TempDir Path temporaryFolder) {
@@ -46,9 +44,79 @@ class WatchingTest {
         Assertions.assertThat(receivedEvents).isEmpty();
     }
 
+    private static Stream<Arguments> shouldWatchCreations() {
+        return Arrays.stream(PathKind.values()).map(Arguments::of);
+    }
+
+    private static Stream<Arguments> provideArguments() {
+        Array<PathKind> pathKinds = Array.of(PathKind.values());
+        Array<ModificationKind> modificationKinds = Array.of(ModificationKind.values());
+
+        var arguments = pathKinds.crossProduct(modificationKinds);
+        return arguments.toJavaStream().map(tuple -> Arguments.of(tuple._1(), tuple._2()));
+    }
+
     @ParameterizedTest
     @MethodSource
-    void shouldWatchModifiedFile(PathKind pathKind, ModificationKind strategy, @TempDir Path temporaryDirectory) throws InterruptedException {
+    void shouldWatchCreations(PathKind pathKind, @TempDir Path temporaryDirectory) throws InterruptedException {
+        //given
+        ConcurrentHashMap<UUID, FilesystemEvent> receivedEvents = new ConcurrentHashMap<>();
+        FilesystemNotifier monitor = FilesystemMonitor.builder()
+                .watchedPath(temporaryDirectory)
+                .watchedConstraints(FilesystemConstraints.DEFAULT.withRecursive(true))
+                .watchedConsumer(filesystemEvent -> {
+                    log.info("ADDED: {}", filesystemEvent);
+                    receivedEvents.put(UUID.randomUUID(), filesystemEvent);
+                })
+                .build();
+        monitor.startWatching();
+
+        //when
+        PathKind.PathScenario setup = pathKind.apply(temporaryDirectory);
+        List<Path> createdPaths = setup.getAllPaths();
+        //TODO Monitor should initialize recursive directory watchers if possible before exiting from startWatching method.
+        Thread.sleep(100);
+
+        //then
+        AwaitilityUtils.awaitForSize(receivedEvents, createdPaths.size());
+        List<FilesystemEvent> createdEvents = createdPaths.stream()
+                .map(path -> FilesystemEvent.of(path, CREATED))
+                .collect(Collectors.toList());
+        Assertions.assertThat(receivedEvents.values()).containsExactlyInAnyOrderElementsOf(createdEvents);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideArguments")
+    void shouldWatchDeletions(PathKind pathKind, ModificationKind strategy, @TempDir Path temporaryDirectory) throws InterruptedException {
+        //given
+        PathKind.PathScenario setup = pathKind.apply(temporaryDirectory);
+        Path testedPath = setup.getTestedPath();
+
+        //when
+        List<FilesystemEvent> receivedEvents = Collections.synchronizedList(new ArrayList<>());
+        FilesystemNotifier monitor = FilesystemMonitor.builder()
+                .watchedPath(temporaryDirectory)
+                .watchedConstraints(FilesystemConstraints.DEFAULT.withRecursive(true))
+                .watchedConsumer(receivedEvents::add)
+                .build();
+
+        //when
+        monitor.startWatching();
+        //TODO Monitor should initialize recursive directory watchers if possible before exiting from startWatching method.
+        Thread.sleep(100);
+        strategy.apply(testedPath);
+
+        //then
+        AwaitilityUtils.awaitForSize(receivedEvents, setup.getAllPaths().size() + 1);
+        Stream<FilesystemEvent> initial = setup.getAllPaths().stream().map(path -> FilesystemEvent.of(path, INITIAL));
+        Stream<FilesystemEvent> modified = Stream.of(FilesystemEvent.of(setup.getSubjectPath(), strategy.getExpectedEvent()));
+        List<FilesystemEvent> expected = Stream.concat(initial, modified).collect(Collectors.toList());
+        Assertions.assertThat(receivedEvents).containsExactlyInAnyOrderElementsOf(expected);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideArguments")
+    void shouldWatchModifications(PathKind pathKind, ModificationKind strategy, @TempDir Path temporaryDirectory) throws InterruptedException {
         //given
         PathKind.PathScenario setup = pathKind.apply(temporaryDirectory);
         Path testedPath = setup.getTestedPath();

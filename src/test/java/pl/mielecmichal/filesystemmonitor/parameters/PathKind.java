@@ -2,12 +2,14 @@ package pl.mielecmichal.filesystemmonitor.parameters;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
 
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Function;
 
+@Slf4j
 @RequiredArgsConstructor
 public enum PathKind implements Function<Path, PathKind.PathScenario> {
     DIRECTORY(path -> {
@@ -22,6 +24,11 @@ public enum PathKind implements Function<Path, PathKind.PathScenario> {
         Path filePath = FILE.apply(path).getSubjectPath();
         Path linkPath = FilesystemUtils.createLink(filePath, "symlink", path);
         return PathScenario.of(linkPath, filePath, List.of(linkPath, filePath));
+    }),
+    DIRECTORY_SYMLINK(path -> {
+        Path directoryPath = DIRECTORY.apply(path).getSubjectPath();
+        Path linkPath = FilesystemUtils.createLink(directoryPath, "symlink", path);
+        return PathScenario.of(linkPath, directoryPath, List.of(linkPath, directoryPath));
     }),
     RECURSIVE_DIRECTORY(path -> {
         Path first = FilesystemUtils.createDirectory(path, "first");
