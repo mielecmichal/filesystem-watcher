@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import pl.mielecmichal.filesystemmonitor.FilesystemEventType;
 import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
@@ -16,9 +15,7 @@ public enum ModificationKind implements Function<Path, Path> {
 
 	ADD_POSIX_PERMISSION(ModificationKind::addPermission, FilesystemEventType.MODIFIED),
 	REMOVE_POSIX_PERMISSION(ModificationKind::removePermission, FilesystemEventType.MODIFIED),
-	SET_SAME_PERMISSIONS(ModificationKind::setSamePermissions, FilesystemEventType.MODIFIED),
-	DELETE(FilesystemUtils::delete, FilesystemEventType.DELETED),
-	CREATE_FILE(ModificationKind::createFile, FilesystemEventType.CREATED);
+    SET_SAME_PERMISSIONS(ModificationKind::setSamePermissions, FilesystemEventType.MODIFIED);
 
 	private final Function<Path, Path> fileModifier;
 	@Getter
@@ -50,11 +47,4 @@ public enum ModificationKind implements Function<Path, Path> {
 		return FilesystemUtils.setPosixFilePermissions(path, permissions);
 	}
 
-	private static Path createFile(Path path){
-		Path directory = path;
-		if(!Files.isDirectory(path)){
-			directory = path.getParent();
-		}
-		return FilesystemUtils.createFile(directory, "newlyCreatedFile.txt");
-	}
 }
