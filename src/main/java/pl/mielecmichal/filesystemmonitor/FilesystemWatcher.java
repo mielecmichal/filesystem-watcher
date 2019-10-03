@@ -97,6 +97,7 @@ public class FilesystemWatcher implements FilesystemNotifier {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 WatchKey watchedKey = watchableUtility.getWatchService().take();
+
                 log.info("Watched key: {}", watchedKey.watchable());
 
                 for (WatchEvent<?> watchEvent : watchedKey.pollEvents()) {
