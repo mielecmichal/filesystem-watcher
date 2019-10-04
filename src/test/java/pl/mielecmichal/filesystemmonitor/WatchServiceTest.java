@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
@@ -31,34 +30,53 @@ import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 @Slf4j
 class WatchServiceTest {
     private static final WatchEvent.Kind[] ALL_EVENT_KINDS = new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY, OVERFLOW};
+    private static final FileSystem FILE_SYSTEM = FileSystems.getDefault();
 
-
-    @RepeatedTest(20)
-    void shouldObserveSymlinks(@TempDir Path temporaryDirectory) throws IOException, InterruptedException {
-
-        FileSystem fileSystem = FileSystems.getDefault();
-        WatchService watchService = fileSystem.newWatchService();
-        temporaryDirectory.register(watchService, ALL_EVENT_KINDS, SensitivityWatchEventModifier.HIGH);
-        List<WatchEvent> observedEvents = new CopyOnWriteArrayList<>();
-
-        CountDownLatch startLatch = new CountDownLatch(1);
+    private static CountDownLatch startWatching(WatchService watchService, List<WatchEvent> observedEvents) {
+        CountDownLatch initializationLatch = new CountDownLatch(1);
         Executors.newSingleThreadExecutor().submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    log.info("STARTED");
-                    startLatch.countDown();
+                    log.info("Watching started");
+                    initializationLatch.countDown();
                     WatchKey take = watchService.take();
                     List<WatchEvent<?>> events = take.pollEvents();
                     events.forEach(event -> log.info("Event: kind={} path={} count={}", event.kind(), event.context(), event.count()));
                     observedEvents.addAll(events);
+                    take.reset();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
 
             }
         });
+        return initializationLatch;
+    }
 
-        startLatch.await(10, TimeUnit.MILLISECONDS);
+    @RepeatedTest(20)
+    void shouldObserveSymlinksWithoutTryIO(@TempDir Path temporaryDirectory) throws IOException, InterruptedException {
+        WatchService watchService = FILE_SYSTEM.newWatchService();
+        temporaryDirectory.register(watchService, ALL_EVENT_KINDS, SensitivityWatchEventModifier.HIGH);
+
+        List<WatchEvent> observedEvents = new CopyOnWriteArrayList<>();
+        CountDownLatch initializationLatch = startWatching(watchService, observedEvents);
+        initializationLatch.await();
+
+        Path file = Files.createFile(temporaryDirectory.resolve("test.txt"));
+        Path linkPath = Files.createSymbolicLink(temporaryDirectory.resolve("symlink"), file);
+        log.info("{} {}", file, linkPath);
+
+        Awaitility.await().atMost(Duration.TWO_HUNDRED_MILLISECONDS).until(() -> observedEvents.size() == 2);
+    }
+
+    @RepeatedTest(20)
+    void shouldObserveSymlinksWithLogging(@TempDir Path temporaryDirectory) throws IOException, InterruptedException {
+        WatchService watchService = FILE_SYSTEM.newWatchService();
+        temporaryDirectory.register(watchService, ALL_EVENT_KINDS, SensitivityWatchEventModifier.HIGH);
+
+        List<WatchEvent> observedEvents = new CopyOnWriteArrayList<>();
+        CountDownLatch initializationLatch = startWatching(watchService, observedEvents);
+        initializationLatch.await();
 
         Path file = TryIO.with(() -> {
             Path file1 = Files.createFile(temporaryDirectory.resolve("test.txt"));
@@ -74,44 +92,6 @@ class WatchServiceTest {
         log.info("{} {}", file, linkPath);
 
         Awaitility.await().atMost(Duration.TWO_HUNDRED_MILLISECONDS).until(() -> observedEvents.size() == 2);
-
-    }
-
-
-    @RepeatedTest(20)
-    void shouldObserveSymlinks2(@TempDir Path temporaryDirectory) throws IOException, InterruptedException {
-
-        FileSystem fileSystem = FileSystems.getDefault();
-        WatchService watchService = fileSystem.newWatchService();
-        temporaryDirectory.register(watchService, ALL_EVENT_KINDS, SensitivityWatchEventModifier.HIGH);
-        List<WatchEvent> observedEvents = new CopyOnWriteArrayList<>();
-
-        CountDownLatch startLatch = new CountDownLatch(1);
-        Executors.newSingleThreadExecutor().submit(() -> {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    log.info("STARTED");
-                    startLatch.countDown();
-                    WatchKey take = watchService.take();
-                    List<WatchEvent<?>> events = take.pollEvents();
-                    events.forEach(event -> log.info("Event: kind={} path={} count={}", event.kind(), event.context(), event.count()));
-                    observedEvents.addAll(events);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-
-            }
-        });
-
-        startLatch.await(10, TimeUnit.MILLISECONDS);
-
-        Path file = TryIO.with(() -> Files.createFile(temporaryDirectory.resolve("test.txt")));
-        Path linkPath = TryIO.with(() -> Files.createSymbolicLink(temporaryDirectory.resolve("symlink"), file));
-
-        log.info("{} {}", file, linkPath);
-
-        Awaitility.await().atMost(Duration.TWO_HUNDRED_MILLISECONDS).until(() -> observedEvents.size() == 2);
-
     }
 
     static class TryIO {
@@ -131,5 +111,22 @@ class WatchServiceTest {
         interface ThrowingSupplier<T> {
             T apply() throws IOException;
         }
+    }
+
+    @RepeatedTest(20)
+    void shouldObserveSymlinksWithoutLogging(@TempDir Path temporaryDirectory) throws IOException, InterruptedException {
+        FileSystem fileSystem = FileSystems.getDefault();
+        WatchService watchService = fileSystem.newWatchService();
+        temporaryDirectory.register(watchService, ALL_EVENT_KINDS, SensitivityWatchEventModifier.HIGH);
+        List<WatchEvent> observedEvents = new CopyOnWriteArrayList<>();
+
+        CountDownLatch initializationLatch = startWatching(watchService, observedEvents);
+        initializationLatch.await();
+
+        Path file = TryIO.with(() -> Files.createFile(temporaryDirectory.resolve("test.txt")));
+        Path linkPath = TryIO.with(() -> Files.createSymbolicLink(temporaryDirectory.resolve("symlink"), file));
+        log.info("{} {}", file, linkPath);
+
+        Awaitility.await().atMost(Duration.TWO_HUNDRED_MILLISECONDS).until(() -> observedEvents.size() == 2);
     }
 }
