@@ -1,6 +1,6 @@
 package pl.mielecmichal.filesystemmonitor;
 
-import com.sun.nio.file.SensitivityWatchEventModifier;
+import io.vavr.collection.List;
 import io.vavr.control.Try;
 import lombok.Builder;
 import lombok.Value;
@@ -29,6 +29,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
 import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.CREATED;
 import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.DELETED;
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
 @Slf4j
 @Builder
@@ -73,16 +74,6 @@ public class FilesystemWatcher implements FilesystemNotifier {
         WatchKey key = watchableUtility.registerWatchable(path);
         watchedKeys.putIfAbsent(path, key);
         log.info("Watching started: {}", path);
-        FilesystemReader.builder()
-                .watchedPath(path)
-                .watchedConstraints(watchedConstraints)
-                .watchedConsumer(filesystemEvent -> {
-                    if (!watchedKeys.containsKey(filesystemEvent.getPath())) {
-                        watchedConsumer.accept(FilesystemEvent.of(filesystemEvent.getPath(), CREATED));
-                    }
-                }).build()
-                .startWatching();
-
     }
 
     private void stopWatching(Path path) {
@@ -136,8 +127,20 @@ public class FilesystemWatcher implements FilesystemNotifier {
 
                 Path path = event.getPath();
                 if (Files.isDirectory(path)) {
-                    if (CREATED == event.getEventType()) {
+                    if (List.of(CREATED, INITIAL).contains(event.getEventType())) {
                         startWatching(path);
+                        // TODO refactor
+                        if (CREATED == event.getEventType()) {
+                            FilesystemReader.builder()
+                                    .watchedPath(path)
+                                    .watchedConstraints(watchedConstraints)
+                                    .watchedConsumer(filesystemEvent -> {
+                                        if (!watchedKeys.containsKey(filesystemEvent.getPath())) {
+                                            watchedConsumer.accept(FilesystemEvent.of(filesystemEvent.getPath(), CREATED));
+                                        }
+                                    }).build()
+                                    .startWatching();
+                        }
                     } else if (DELETED == event.getEventType()) {
                         stopWatching(path);
                     }
@@ -164,7 +167,7 @@ public class FilesystemWatcher implements FilesystemNotifier {
         }
 
         private WatchKey registerWatchable(Watchable watchable) {
-            return Try.of(() -> watchable.register(watchService, ALL_EVENT_KINDS, SensitivityWatchEventModifier.LOW)).getOrElseThrow(EXCEPTION_SUPPLIER);
+            return Try.of(() -> watchable.register(watchService, ALL_EVENT_KINDS)).getOrElseThrow(EXCEPTION_SUPPLIER);
         }
 
         void closeWatchService() {
