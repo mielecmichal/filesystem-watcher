@@ -4,12 +4,21 @@ import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 
 import java.util.Collection;
+import java.util.Map;
 
 public class AwaitilityUtils {
 
-	private static final Duration DEFAULT_DURATION = Duration.ONE_HUNDRED_MILLISECONDS;
+	private static final Duration DEFAULT_WAIT_TIME = Duration.FIVE_HUNDRED_MILLISECONDS;
 
 	public static void awaitForSize(Collection collection, int expectedSize) {
-		Awaitility.await().atLeast(DEFAULT_DURATION).until(() -> collection.size() == expectedSize);
+		Awaitility.await()
+				.atMost(DEFAULT_WAIT_TIME)
+				.until(() -> collection.size() == expectedSize);
+	}
+
+	public static void awaitForSize(Map map, int expectedSize) {
+		Awaitility.await()
+				.atMost(DEFAULT_WAIT_TIME)
+				.until(() -> map.size() == expectedSize);
 	}
 }

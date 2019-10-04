@@ -2,7 +2,8 @@ package pl.mielecmichal.filesystemmonitor;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -30,7 +31,9 @@ public class FilesystemReader implements FilesystemNotifier {
     public void startWatching() {
         ConstraintsFilteringVisitor visitor = new ConstraintsFilteringVisitor(watchedPath, watchedConstraints);
         try {
+            log.info("Reading started path={}", watchedPath);
             Files.walkFileTree(watchedPath, visitor);
+            log.info("Reading completed path={}", watchedPath);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -43,17 +46,18 @@ public class FilesystemReader implements FilesystemNotifier {
         // For now we do not need to implement this. Maybe later to make this class more responsive to stop.
     }
 
-    @Value
+    @RequiredArgsConstructor
     @EqualsAndHashCode(callSuper = true)
     private static final class ConstraintsFilteringVisitor extends SimpleFileVisitor<Path> {
 
         private final Path watchedPatch;
-        private final List<FilesystemEvent> events = new ArrayList<>();
         private final FilesystemConstraints constraints;
+        @Getter
+        private final List<FilesystemEvent> events = new ArrayList<>();
 
         @Override
-        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-            super.postVisitDirectory(dir, exc);
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            super.preVisitDirectory(dir, attrs);
 
             if (dir.equals(watchedPatch)) {
                 return FileVisitResult.CONTINUE;
@@ -62,7 +66,7 @@ public class FilesystemReader implements FilesystemNotifier {
             addFilesystemEvent(dir);
 
             if (!constraints.isRecursive()) {
-                return FileVisitResult.TERMINATE;
+                return FileVisitResult.SKIP_SUBTREE;
             }
 
             return FileVisitResult.CONTINUE;
@@ -80,6 +84,7 @@ public class FilesystemReader implements FilesystemNotifier {
 
             if (constraints.test(filesystemEvent)) {
                 events.add(filesystemEvent);
+                log.info("Created event: {}", filesystemEvent);
             }
         }
     }

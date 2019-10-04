@@ -8,6 +8,7 @@ import lombok.experimental.Wither;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
@@ -69,7 +70,7 @@ public class FilesystemConstraints implements Predicate<FilesystemEvent> {
 
     private BasicFileAttributes readAttributes(Path path) {
         try {
-            return Files.readAttributes(path, BasicFileAttributes.class);
+            return Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

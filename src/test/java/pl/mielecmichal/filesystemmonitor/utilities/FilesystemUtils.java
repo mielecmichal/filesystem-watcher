@@ -28,6 +28,10 @@ public class FilesystemUtils {
         return TryIO.with(() -> Files.createFile(path.resolve(name)));
     }
 
+    public static Path createLink(Path linkTarget, String linkName, Path linkPlace) {
+        return TryIO.with(() -> Files.createSymbolicLink(linkPlace.resolve(linkName), linkTarget));
+    }
+
     public static Set<PosixFilePermission> getPosixFilePermissions(Path path) {
         return TryIO.with(() -> Files.getPosixFilePermissions(path));
     }
