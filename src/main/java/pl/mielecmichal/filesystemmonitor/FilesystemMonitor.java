@@ -3,49 +3,64 @@ package pl.mielecmichal.filesystemmonitor;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.NonFinal;
-import lombok.extern.java.Log;
+import lombok.experimental.Wither;
 
 import java.nio.file.Path;
-import java.util.LinkedHashSet;
+import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
-@Log
-@Value
 @Builder
-public class FilesystemMonitor implements FilesystemWatcher {
+public class FilesystemMonitor implements FilesystemNotifier {
 
-    private final Path watchedPath;
-    private final Consumer<FilesystemEvent> watchedConsumer;
-    private final FilesystemConstraints watchedConstraints = new FilesystemConstraints();
-    private final LinkedHashSet<FilesystemEvent> readerBuffer = new LinkedHashSet<>();
+	private final Path watchedPath;
+	private final Consumer<FilesystemEvent> watchedConsumer;
+	private final FilesystemConstraints watchedConstraints;
 
-    @NonFinal
-    private boolean readerCompleted = false;
+	private final BlockingQueue<FilesystemEvent> queue = new ArrayBlockingQueue<>(100000);
+	private final ExecutorService producersExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "filesystem-monitor-producers" + UUID.randomUUID().toString()));
+	private final ExecutorService consumersExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "filesystem-monitor-consumers" + UUID.randomUUID().toString()));
 
-    @Override
-    public void watch() {
-        NioFilesystemWatcher nioFilesystemWatcher = NioFilesystemWatcher.builder()
-                .watchedPath(watchedPath)
-                .watchedConstraints(watchedConstraints)
-                .watchedConsumer(this::consumeEvent)
-                .build();
-        nioFilesystemWatcher.watch();
+	@NonFinal
+	private FilesystemNotifier watcher;
+	@NonFinal
+	private FilesystemNotifier reader;
 
-        NioFilesystemReader nioFilesystemReader = NioFilesystemReader.builder()
-                .watchedPath(watchedPath)
-                .watchedConstraints(watchedConstraints)
-                .watchedConsumer(this::consumeEvent)
-                .build();
-        nioFilesystemReader.watch();
-        readerCompleted = true;
-        readerBuffer.forEach(watchedConsumer);
-    }
+	@Override
+	public void startWatching() {
+		watcher = FilesystemWatcher.builder()
+				.watchedPath(watchedPath)
+				.watchedConstraints(watchedConstraints)
+				.watchedConsumer(watchedConsumer)
+				.producersExecutor(producersExecutor)
+				.consumersExecutor(consumersExecutor)
+				.blockingQueue(queue)
+				.build();
 
-    private void consumeEvent(FilesystemEvent event){
-        if(!readerCompleted){
-            readerBuffer.add(event);
-            return;
-        }
-        watchedConsumer.accept(event);
-    }
+		reader = FilesystemReader.builder()
+				.watchedPath(watchedPath)
+				.watchedConstraints(watchedConstraints)
+				.watchedConsumer(this::consumeEvent)
+				.build();
+
+		watcher.startWatching();
+		reader.startWatching();
+	}
+
+	@Override
+	public void stopWatching() {
+		reader.stopWatching();
+		watcher.stopWatching();
+	}
+
+	private void consumeEvent(FilesystemEvent event) {
+		try {
+			queue.put(event);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+	}
 }

@@ -1,5 +1,6 @@
 package pl.mielecmichal.filesystemmonitor;
 
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.experimental.Wither;
@@ -7,13 +8,17 @@ import lombok.experimental.Wither;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.DELETED;
+
 @Value
+@Builder
 @Wither
 public class FilesystemConstraints implements Predicate<FilesystemEvent> {
 
@@ -27,14 +32,21 @@ public class FilesystemConstraints implements Predicate<FilesystemEvent> {
         private final Predicate<BasicFileAttributes> predicate;
     }
 
-    private final List<String> filenameSubstrings = List.of();
-    private final List<Pattern> filenamePatterns = List.of();
-    private final List<FileType> fileTypes = List.of();
+    public static final FilesystemConstraints DEFAULT = FilesystemConstraints.builder().build()
+            .withFilenamePatterns(List.of())
+            .withFilenameSubstrings(List.of())
+            .withFileTypes(List.of())
+            .withRecursive(false);
+
+    private final List<String> filenameSubstrings;
+    private final List<Pattern> filenamePatterns;
+    private final List<FileType> fileTypes;
+    private final boolean isRecursive;
 
     @Override
     public boolean test(FilesystemEvent event) {
         Path path = event.getPath();
-        if (event.getEventType() != FilesystemEvent.FilesystemEventType.DELETED && !fileTypes.isEmpty()) {
+        if (!fileTypes.isEmpty() && event.getEventType() != DELETED) {
             BasicFileAttributes fileAttributes = readAttributes(path);
             if (fileTypes.stream().noneMatch(fileType -> fileType.predicate.test(fileAttributes))) {
                 return false;
@@ -53,14 +65,12 @@ public class FilesystemConstraints implements Predicate<FilesystemEvent> {
                 return false;
             }
         }
-
         return true;
-
     }
 
     private BasicFileAttributes readAttributes(Path path) {
         try {
-            return Files.readAttributes(path, BasicFileAttributes.class);
+            return Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
