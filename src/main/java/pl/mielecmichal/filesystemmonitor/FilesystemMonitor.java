@@ -1,6 +1,9 @@
 package pl.mielecmichal.filesystemmonitor;
 
 import lombok.Builder;
+import lombok.Value;
+import lombok.experimental.NonFinal;
+import lombok.experimental.Wither;
 
 import java.nio.file.Path;
 import java.util.UUID;
@@ -10,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
+@Builder
 public class FilesystemMonitor implements FilesystemNotifier {
 
 	private final Path watchedPath;
@@ -20,15 +24,10 @@ public class FilesystemMonitor implements FilesystemNotifier {
 	private final ExecutorService producersExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "filesystem-monitor-producers" + UUID.randomUUID().toString()));
 	private final ExecutorService consumersExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "filesystem-monitor-consumers" + UUID.randomUUID().toString()));
 
+	@NonFinal
 	private FilesystemNotifier watcher;
+	@NonFinal
 	private FilesystemNotifier reader;
-
-	@Builder
-	public FilesystemMonitor(Path watchedPath, Consumer<FilesystemEvent> watchedConsumer, FilesystemConstraints watchedConstraints) {
-		this.watchedPath = watchedPath;
-		this.watchedConsumer = watchedConsumer;
-		this.watchedConstraints = watchedConstraints;
-	}
 
 	@Override
 	public void startWatching() {
