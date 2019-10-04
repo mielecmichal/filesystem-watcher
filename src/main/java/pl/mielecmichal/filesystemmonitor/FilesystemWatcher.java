@@ -73,9 +73,8 @@ public class FilesystemWatcher implements FilesystemNotifier {
         WatchKey key = watchableUtility.registerWatchable(path);
         watchedKeys.putIfAbsent(path, key);
         log.info("Watching started: {}", path);
-
         FilesystemReader.builder()
-                .watchedPath(watchedPath)
+                .watchedPath(path)
                 .watchedConstraints(watchedConstraints)
                 .watchedConsumer(filesystemEvent -> {
                     if (!watchedKeys.containsKey(filesystemEvent.getPath())) {
@@ -120,6 +119,7 @@ public class FilesystemWatcher implements FilesystemNotifier {
                     }
 
                     blockingQueue.put(filesystemEvent);
+                    watchedKey.reset();
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
