@@ -1,4 +1,4 @@
-package pl.mielecmichal.filesystemmonitor.utilities;
+package io.github.filesystemwatcher.utilities;
 
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;

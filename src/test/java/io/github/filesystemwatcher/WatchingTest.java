@@ -1,5 +1,9 @@
-package pl.mielecmichal.filesystemmonitor;
+package io.github.filesystemwatcher;
 
+import io.github.filesystemwatcher.parameters.ModificationKind;
+import io.github.filesystemwatcher.parameters.PathKind;
+import io.github.filesystemwatcher.utilities.AwaitilityUtils;
+import io.github.filesystemwatcher.utilities.FilesystemUtils;
 import io.vavr.collection.Array;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
@@ -8,25 +12,15 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import pl.mielecmichal.filesystemmonitor.parameters.ModificationKind;
-import pl.mielecmichal.filesystemmonitor.parameters.PathKind;
-import pl.mielecmichal.filesystemmonitor.utilities.AwaitilityUtils;
-import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.CREATED;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.DELETED;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
+import static io.github.filesystemwatcher.FilesystemEventType.*;
 
 @Slf4j
 class WatchingTest {

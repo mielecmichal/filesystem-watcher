@@ -1,9 +1,9 @@
-package pl.mielecmichal.filesystemmonitor.parameters;
+package io.github.filesystemwatcher.parameters;
 
+import io.github.filesystemwatcher.FilesystemEventType;
+import io.github.filesystemwatcher.utilities.FilesystemUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import pl.mielecmichal.filesystemmonitor.FilesystemEventType;
-import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
 
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;

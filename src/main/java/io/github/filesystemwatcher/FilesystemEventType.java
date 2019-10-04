@@ -1,4 +1,4 @@
-package pl.mielecmichal.filesystemmonitor;
+package io.github.filesystemwatcher;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
