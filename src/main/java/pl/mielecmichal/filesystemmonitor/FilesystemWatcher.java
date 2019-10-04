@@ -1,13 +1,20 @@
 package pl.mielecmichal.filesystemmonitor;
 
+import io.vavr.collection.List;
 import io.vavr.control.Try;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.*;
-import java.util.List;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
+import java.nio.file.Watchable;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,8 +23,13 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static java.nio.file.StandardWatchEventKinds.*;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.*;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.CREATED;
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.DELETED;
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
 @Slf4j
 @Builder
@@ -75,6 +87,7 @@ public class FilesystemWatcher implements FilesystemNotifier {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 WatchKey watchedKey = watchableUtility.getWatchService().take();
+
                 log.info("Watched key: {}", watchedKey.watchable());
 
                 for (WatchEvent<?> watchEvent : watchedKey.pollEvents()) {
@@ -97,6 +110,7 @@ public class FilesystemWatcher implements FilesystemNotifier {
                     }
 
                     blockingQueue.put(filesystemEvent);
+                    watchedKey.reset();
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -113,9 +127,21 @@ public class FilesystemWatcher implements FilesystemNotifier {
 
                 Path path = event.getPath();
                 if (Files.isDirectory(path)) {
-                    if (List.of(INITIAL, CREATED).contains(event.getEventType())) {
+                    if (List.of(CREATED, INITIAL).contains(event.getEventType())) {
                         startWatching(path);
-                    } else if (event.getEventType() == DELETED) {
+                        // TODO refactor
+                        if (CREATED == event.getEventType()) {
+                            FilesystemReader.builder()
+                                    .watchedPath(path)
+                                    .watchedConstraints(watchedConstraints)
+                                    .watchedConsumer(filesystemEvent -> {
+                                        if (!watchedKeys.containsKey(filesystemEvent.getPath())) {
+                                            watchedConsumer.accept(FilesystemEvent.of(filesystemEvent.getPath(), CREATED));
+                                        }
+                                    }).build()
+                                    .startWatching();
+                        }
+                    } else if (DELETED == event.getEventType()) {
                         stopWatching(path);
                     }
                 }
@@ -130,22 +156,22 @@ public class FilesystemWatcher implements FilesystemNotifier {
 
     @Value
     private static class WatchableUtility {
+        private static final Supplier<IllegalStateException> EXCEPTION_SUPPLIER = IllegalStateException::new;
         private static final WatchEvent.Kind[] ALL_EVENT_KINDS = new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY, OVERFLOW};
 
-        private final Supplier<IllegalStateException> exceptionSupplier = IllegalStateException::new;
         private final WatchService watchService = createWatchService();
 
         private WatchService createWatchService() {
             FileSystem fileSystem = FileSystems.getDefault();
-            return Try.of(fileSystem::newWatchService).getOrElseThrow(exceptionSupplier);
+            return Try.of(fileSystem::newWatchService).getOrElseThrow(EXCEPTION_SUPPLIER);
         }
 
         private WatchKey registerWatchable(Watchable watchable) {
-            return Try.of(() -> watchable.register(watchService, ALL_EVENT_KINDS)).getOrElseThrow(exceptionSupplier);
+            return Try.of(() -> watchable.register(watchService, ALL_EVENT_KINDS)).getOrElseThrow(EXCEPTION_SUPPLIER);
         }
 
         void closeWatchService() {
-            Try.run(watchService::close).getOrElseThrow(exceptionSupplier);
+            Try.run(watchService::close).getOrElseThrow(EXCEPTION_SUPPLIER);
         }
     }
 }
