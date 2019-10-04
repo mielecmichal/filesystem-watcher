@@ -1,4 +1,4 @@
-package pl.mielecmichal.filesystemmonitor;
+package io.github.filesystemwatcher;
 
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -16,8 +16,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
 
 @Slf4j
 @Builder
@@ -80,7 +78,7 @@ public class FilesystemReader implements FilesystemNotifier {
         }
 
         private void addFilesystemEvent(Path path) {
-            FilesystemEvent filesystemEvent = FilesystemEvent.of(path, INITIAL);
+            FilesystemEvent filesystemEvent = FilesystemEvent.of(path, FilesystemEventType.INITIAL);
 
             if (constraints.test(filesystemEvent)) {
                 events.add(filesystemEvent);

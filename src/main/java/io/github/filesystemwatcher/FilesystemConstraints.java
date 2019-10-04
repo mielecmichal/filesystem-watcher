@@ -1,4 +1,4 @@
-package pl.mielecmichal.filesystemmonitor;
+package io.github.filesystemwatcher;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.DELETED;
+import static io.github.filesystemwatcher.FilesystemEventType.DELETED;
 
 @Value
 @Builder

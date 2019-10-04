@@ -1,4 +1,4 @@
-package pl.mielecmichal.filesystemmonitor;
+package io.github.filesystemwatcher;
 
 public interface FilesystemNotifier {
 
