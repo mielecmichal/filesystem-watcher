@@ -1,7 +1,7 @@
-# Filesystem Monitor
+# Filesystem Watcher
 Watch for filesystem changes in you Java project in simple and robust way.
-Project utilize Java 7 APIs like WatchService (which does not pool filesystem for changes) 
-and FileVisitor (which handles intensively changing directories) 
+Project utilize Java 7 APIs like WatchService (which does not pool filesystem for changes in most common environments) 
+and FileVisitor (which correctly handles intensively changing directories) 
 
 ## Getting Started
 
@@ -9,9 +9,9 @@ Add the dependency:
 
 ```
 <dependency>
-    <groupId>pl.mielecmichal</groupId>
-    <artifactId>filesystem-monitor</artifactId>
-    <version>1.0</version>
+    <groupId>io.github.filesystem-watcher</groupId>
+    <artifactId>filesystem-watcher</artifactId>
+    <version>0.1.0</version>
 </dependency>
 ```
 
