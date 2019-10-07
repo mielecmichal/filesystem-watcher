@@ -1,5 +1,6 @@
 package pl.mielecmichal.filesystemmonitor;
 
+import io.vavr.Tuple3;
 import io.vavr.collection.Array;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
@@ -8,25 +9,20 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import pl.mielecmichal.filesystemmonitor.parameters.FilesystemKind;
 import pl.mielecmichal.filesystemmonitor.parameters.ModificationKind;
 import pl.mielecmichal.filesystemmonitor.parameters.PathKind;
 import pl.mielecmichal.filesystemmonitor.utilities.AwaitilityUtils;
 import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.CREATED;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.DELETED;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.*;
 
 @Slf4j
 class WatchingTest {
@@ -35,12 +31,15 @@ class WatchingTest {
         return Arrays.stream(PathKind.values()).map(Arguments::of);
     }
 
-    private static Stream<Arguments> allModificationKindsOnAllPathKinds() {
-        Array<PathKind> pathKinds = Array.of(PathKind.values());
-        Array<ModificationKind> modificationKinds = Array.of(ModificationKind.values());
+    private static Stream<Arguments> allModificationKindsOnAllPathKindsOnAllFilesystems() {
+        var pathKinds = Array.of(PathKind.values());
+        var modificationKinds = Array.of(ModificationKind.values());
+        var filesystemKinds = Array.of(FilesystemKind.values());
 
-        var arguments = pathKinds.crossProduct(modificationKinds);
-        return arguments.toJavaStream().map(tuple -> Arguments.of(tuple._1(), tuple._2()));
+        var pathKindsAndModifications = pathKinds.crossProduct(modificationKinds).toArray();
+        var pathKindsAndModificationsAndFilesystems = pathKindsAndModifications.crossProduct(filesystemKinds)
+                .map(tuple -> new Tuple3<>(tuple._1._1, tuple._1._2, tuple._2));
+        return pathKindsAndModificationsAndFilesystems.toJavaStream().map(tuple -> Arguments.of(tuple._1(), tuple._2(), tuple._3()));
     }
 
     @Test
@@ -121,16 +120,17 @@ class WatchingTest {
     }
 
     @ParameterizedTest
-    @MethodSource("allModificationKindsOnAllPathKinds")
-    void shouldWatchModifications(PathKind pathKind, ModificationKind strategy, @TempDir Path temporaryDirectory) throws InterruptedException {
+    @MethodSource("allModificationKindsOnAllPathKindsOnAllFilesystems")
+    void shouldWatchModifications(PathKind pathKind, ModificationKind strategy, FilesystemKind filesystemKind) throws InterruptedException {
         //given
-        PathKind.PathScenario setup = pathKind.apply(temporaryDirectory);
+        Path tempDirectory = filesystemKind.getPathSupplier().get();
+        PathKind.PathScenario setup = pathKind.apply(tempDirectory);
         Path testedPath = setup.getTestedPath();
 
         //when
         List<FilesystemEvent> receivedEvents = new CopyOnWriteArrayList<>();
         FilesystemNotifier monitor = FilesystemMonitor.builder()
-                .watchedPath(temporaryDirectory)
+                .watchedPath(tempDirectory)
                 .watchedConstraints(FilesystemConstraints.DEFAULT.withRecursive(true))
                 .watchedConsumer(filesystemEvent -> {
                     log.info("Event: {}", filesystemEvent);

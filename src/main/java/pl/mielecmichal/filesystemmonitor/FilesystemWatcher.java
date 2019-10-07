@@ -3,18 +3,11 @@ package pl.mielecmichal.filesystemmonitor;
 import io.vavr.collection.List;
 import io.vavr.control.Try;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.nio.file.Watchable;
+import java.nio.file.*;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,19 +16,12 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
-import static java.nio.file.StandardWatchEventKinds.OVERFLOW;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.CREATED;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.DELETED;
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.INITIAL;
+import static java.nio.file.StandardWatchEventKinds.*;
+import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.*;
 
 @Slf4j
 @Builder
 public class FilesystemWatcher implements FilesystemNotifier {
-
-    private final WatchableUtility watchableUtility = new WatchableUtility();
 
     private final Path watchedPath;
     private final FilesystemConstraints watchedConstraints;
@@ -46,6 +32,7 @@ public class FilesystemWatcher implements FilesystemNotifier {
     private final ExecutorService consumersExecutor;
 
     private final Map<Path, WatchKey> watchedKeys = new ConcurrentHashMap<>();
+    private WatchableUtility watchableUtility;
 
     @NonFinal
     private Future<?> consumer;
@@ -54,6 +41,7 @@ public class FilesystemWatcher implements FilesystemNotifier {
 
     @Override
     public void startWatching() {
+        watchableUtility = new WatchableUtility(watchedPath);
         startWatching(watchedPath);
         consumer = consumersExecutor.submit(this::consumeEvents);
         producer = producersExecutor.submit(this::produceEvents);
@@ -154,20 +142,29 @@ public class FilesystemWatcher implements FilesystemNotifier {
         }
     }
 
-    @Value
+    @Getter
     private static class WatchableUtility {
         private static final Supplier<IllegalStateException> EXCEPTION_SUPPLIER = IllegalStateException::new;
         private static final WatchEvent.Kind[] ALL_EVENT_KINDS = new WatchEvent.Kind[]{ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY, OVERFLOW};
 
-        private final WatchService watchService = createWatchService();
+        private final Path path;
+        private final WatchService watchService;
 
-        private WatchService createWatchService() {
-            FileSystem fileSystem = FileSystems.getDefault();
+        WatchableUtility(Path path) {
+            this.path = path;
+            this.watchService = createWatchService(path);
+        }
+
+        private WatchService createWatchService(Path path) {
+            FileSystem fileSystem = path.getFileSystem();
             return Try.of(fileSystem::newWatchService).getOrElseThrow(EXCEPTION_SUPPLIER);
         }
 
         private WatchKey registerWatchable(Watchable watchable) {
-            return Try.of(() -> watchable.register(watchService, ALL_EVENT_KINDS)).getOrElseThrow(EXCEPTION_SUPPLIER);
+            return Try.of(() -> watchable.register(watchService, ALL_EVENT_KINDS))
+                    .toEither()
+                    .peekLeft(throwable -> log.error("", throwable))
+                    .getOrElseThrow(EXCEPTION_SUPPLIER);
         }
 
         void closeWatchService() {
