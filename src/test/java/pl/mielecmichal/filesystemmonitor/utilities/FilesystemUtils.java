@@ -44,14 +44,29 @@ public class FilesystemUtils {
         return TryIO.with(() -> Files.setPosixFilePermissions(path, permissions));
     }
 
-    static class TryIO {
+    public static class TryIO {
 
         @FunctionalInterface
-        interface ThrowingSupplier<T> {
+        public interface ThrowingSupplier<T> {
             T apply() throws IOException;
         }
 
-        static <T> T with(ThrowingSupplier<T> throwingSupplier) {
+        @FunctionalInterface
+        public interface ThrowingRunnable<T> {
+            void apply() throws IOException;
+        }
+
+        public static void with(ThrowingRunnable throwingSupplier) {
+            Runnable runnable = () -> {
+                try {
+                    throwingSupplier.apply();
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            };
+        }
+
+        public static <T> T with(ThrowingSupplier<T> throwingSupplier) {
             Supplier<T> supplier = () -> {
                 try {
                     return throwingSupplier.apply();

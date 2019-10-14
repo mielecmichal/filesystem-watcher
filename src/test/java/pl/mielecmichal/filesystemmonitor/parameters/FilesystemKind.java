@@ -33,15 +33,21 @@ public enum FilesystemKind {
     }
 
     private static Path createJimfsUnix() {
-        return createJimfs(Configuration.unix());
+        return createJimfs(Configuration.unix().toBuilder()
+                .setAttributeViews("basic", "posix")
+                .build());
     }
 
     private static Path createJimfsWindows() {
-        return createJimfs(Configuration.windows());
+        return createJimfs(Configuration.windows().toBuilder()
+                .setAttributeViews("basic", "dos")
+                .build());
     }
 
     private static Path createJimfsOsX() {
-        return createJimfs(Configuration.osX());
+        return createJimfs(Configuration.osX().toBuilder()
+                .setAttributeViews("basic", "posix")
+                .build());
     }
 
     private static Path createJimfs(Configuration configuration) {

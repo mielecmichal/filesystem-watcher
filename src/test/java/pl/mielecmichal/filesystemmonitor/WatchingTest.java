@@ -147,7 +147,7 @@ class WatchingTest {
         //then
         AwaitilityUtils.awaitForSize(receivedEvents, setup.getAllPaths().size() + 1);
         Stream<FilesystemEvent> initial = setup.getAllPaths().stream().map(path -> FilesystemEvent.of(path, INITIAL));
-        Stream<FilesystemEvent> modified = Stream.of(FilesystemEvent.of(setup.getSubjectPath(), strategy.getExpectedEvent()));
+        Stream<FilesystemEvent> modified = Stream.of(FilesystemEvent.of(setup.getSubjectPath(), MODIFIED));
         List<FilesystemEvent> expected = Stream.concat(initial, modified).collect(Collectors.toList());
         Assertions.assertThat(receivedEvents).containsExactlyInAnyOrderElementsOf(expected);
     }
