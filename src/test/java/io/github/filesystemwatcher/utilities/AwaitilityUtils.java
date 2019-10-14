@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class AwaitilityUtils {
 
-	private static final Duration DEFAULT_WAIT_TIME = Duration.FIVE_HUNDRED_MILLISECONDS;
+    private static final Duration DEFAULT_WAIT_TIME = Duration.ONE_SECOND;
 
 	public static void awaitForSize(Collection collection, int expectedSize) {
 		Awaitility.await()
