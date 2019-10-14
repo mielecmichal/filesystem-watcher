@@ -1,5 +1,21 @@
 language: java
 
+os:
+  - linux
+
 jdk:
   - openjdk11
-  - openjdk13
+
+jobs:
+  include:
+    - stage: test
+      script: mvn test -B
+
+    - stage: install
+      script: mvn install -B
+
+    - stage: deploy
+      script: mvn deploy -P release -B
+      if: branch = master
+
+
