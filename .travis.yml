@@ -1,21 +1,19 @@
 language: java
-
 os:
-  - linux
-
+- linux
 jdk:
-  - openjdk11
-
+- openjdk11
 jobs:
   include:
-    - stage: test
-      script: mvn test -B
-
-    - stage: install
-      script: mvn install -B
-
-    - stage: deploy
-      script: mvn deploy -P release -B
-      if: branch = master
-
-
+  - stage: test
+    script: mvn test -B
+  - stage: install
+    script: mvn install -B
+  - stage: deploy
+    script: mvn deploy -P release -B
+    if: branch = master
+env:
+  global:
+  - secure: dfS4V+DVufVZ0hVYFnw1V8O4yjUZmWDUSlpMqr8zXAMaFCdJSddQTzdSi+8b/nsDqZYRfNSjDYT74Mj3fD0mq70jiuDDXZWKUIExIYzQuiYOlSh1AOHbqPSQ7cNIxNogAOv0G+W8h4BMaUhWafXnkH5Ujdn4W9Bazn3zJSMSQaozM41/l57GJRGsXxA3dKSDjwh1Bo3+EWRIPfepH7Fz3kiEMVwJ9WpXomMlPOkm0DtcPPvd8Q6jlxhOoN2b9fowoXgr3UhLb3R0D0cs9HjCmJ6Y6NtFkgoksbB5fcZ0hRdJDbRpovYxBEB68ZzfwmN5Wlmz8+LI/rw917ZDZppphAaFgKbokDlofXd55N1wOYmXjGEJIo4sIDzIFldeC4m0HDPjR1Yd/jDHgsPRYa01PgSL+7BkubcLzye9dQgjSf0WCHwRgUo8FKWJTkzIOvCy9O3/R/6aiV5iQolM8fIIGmI3GOfY+T18pSM2p9HWsmQmozpA7tiPUi3m1UC3gGNImlCLEsgY5lhnU6bAEDWT5QflqYCkxBoC5VhOTTeNq7PX9zlO81ghvxEOpA0yKcw5EJqeQ/ILuRqoODNx4tLEOXubfIfNMVBPhSDXThSt9ZYwKn58avAmNErlynApOwtG1tkiMnOeQCNEC/2NEuJW5B7Tmfyb8sUI3iW0vKVqRwo=
+  - secure: knQ46CmIB4mNmOVMVM077CFHtUBzbLBSd4/qRRzThoNARZMFlUAvBddMqPxI48qlp5gX7F4bylxTHgvt+fcVJBPdJ8OrEkzwhZqKxdA6ZfybZdJOCR6FNi2U/8Eriv5cKMlC1SO+pQBCYqZr5yqZuLsiOVWZs91CpLuPqqqBXEzrSUZY1EBhPJj0WOVfjWNcF4WD9eX4q4CZoYeRdV2wbzPveQSsIrQNpb/cd4AJygla67sLcFb6Ux3VC9njbZZfu/gJWjE2HSL+sZ4LCPqNZWAB2oZKN5yDyZTaJAIV9G5Ho3Gg8ytPnq6uXKN36w/Obqs2RS+sIA1vWclWkeNl9zcx6MCMs0EI3IIU1wUVkBDsDRoAcaAeozRE2II3+oxaXa+aJ3RCX8mGEZ/oZ+kkbQT8nPl+XyCYGfA1/Q+vd4nZygsGGPKZnkrqHZJdF+vSRJo8rx7kKZSqiKwH/niK4RoGakPIi9PkgjY3YL3tSGHtmr1gyhQUtg8knb26uGGOt+RmrxNDaSYUr2iEYEi/RH0ud+GYJ11p03n3IQWIInwLP521KdPCniGvJjYBjCKu+RJwRoJ2XA/K5xxN3Vo9hAra8qpFl2wACUmMoIhf3Cmty2HAoSM+6pYFkoKQzO47aTwfSptxIuObZbcVwOdryJyn+zli5p5lpJ9B/dQWovs=
+  - secure: tIxqFvZD6gQWpH4xzoU/eMepKTUN1OA6oEsyAS6XyIP2L5DyymbBDKMxEHwZgB59YJN1yIZvNRnFoMag5aanzihrX+SWmgzKmIihHhwJxpl4zUYP5hF9bf5CXbNK5o68pbZ1dGreQBT+qbs9Vhfc1897oUqvvW35LI60txy7OI/2a9d1I2Rh25Lo4HrQZ5Qvnpv0I2cJxsGxvHSAiwIUHU03463EB4LmwtT+kxGmNp7HUuCyPTivewnD1PWzTPuBgMqkZb1ByHDdI6q2gMU8QUiAzp8yExOB8FNun3/jVJlusi2DsfGzvzaHQRK3m83bbY5nIk+JDMPpP1jw2zQ5kSv53TZ7wQdlfF4gk5z/K2h+of+IWzTjfv/M48o5jgBN7KqqADjGB0a/clSy2DpVNWlTVAZqDefYfjGewU8jNj9keIUkc1BS5WSN2OMWNg3UusAZ7uQEbAT8vrWxDuuZ0mgsA8Ub5jsSy31okNgkMkHaqT/1JAu5ljTmKUxqhOtIqo5ZFMvhx6V0MfcUJQ9LLw0SaqLOX0B87XciuSCmzrreXSc2LxPaUd8w1oDmi797szjNLDww267hpVf/PGYAJTWXlVtnRYDEIDhjRAxF6nFmDBglDaAtoJi1d8muk3eftV+lxd/RSMwywMQW4RiR1bRU+NTsTe1+uYZ92PZbrpI=

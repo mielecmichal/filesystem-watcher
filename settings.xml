@@ -1,0 +1,18 @@
+<settings>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <properties>
+                <gpg.executable>gpg2</gpg.executable>
+                <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
+            </properties>
+            <servers>
+                <server>
+                    <id>ossrh</id>
+                    <username>${env.OSSRH_USERNAME}</username>
+                    <password>${env.OSSRH_PASSWORD}</password>
+                </server>
+            </servers>
+        </profile>
+    </profiles>
+</settings>
