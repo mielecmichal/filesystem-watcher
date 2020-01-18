@@ -4,6 +4,7 @@
             <id>release</id>
             <properties>
                 <gpg.executable>gpg2</gpg.executable>
+                <gpg.keyname>0E00D0DBC369EF7725E49DDF88AD626001B52127</gpg.keyname>
                 <gpg.passphrase>${env.GPG_PASSPHRASE}</gpg.passphrase>
             </properties>
             <servers>
