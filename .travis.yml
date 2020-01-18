@@ -9,7 +9,7 @@ before_install:
   - gpg2 --version
   - gpg2 --batch --import signing_key.gpg
 install: skip
-script: ./mvn install -P release --settings settings.xml -B
+script: ./mvnw install -P release --settings settings.xml -B
 
 env:
   global:
