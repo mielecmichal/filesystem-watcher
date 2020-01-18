@@ -191,8 +191,7 @@
                                 <configuration>
                                     <executable>gpg2</executable>
                                     <gpgArguments>
-                                        <arg>--pinentry-mode</arg>
-                                        <arg>loopback</arg>
+                                        <arg>--batch</arg>
                                     </gpgArguments>
                                     <keyname>0E00D0DBC369EF7725E49DDF88AD626001B52127</keyname>
                                     <passphrase>${env.GPG_PASSPHRASE}</passphrase>
