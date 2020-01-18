@@ -13,7 +13,7 @@ jobs:
   - stage: test
     script: mvn test -B
   - stage: install
-    script: mvn install --settings $TRAVIS_BUILD_DIR/settings.xml -B
+    script: mvn install -P release --settings $TRAVIS_BUILD_DIR/settings.xml -B
 env:
   global:
   - secure: P2UFtn2GndoWHNf6xehX79hhlbIqgUUdUZAurUt/QxOGhcz8k3tYJbfkxKTO57+QLkJFJWkjH+eX2Y1ZmDxewRTMPZRRoTx7yohOunOXPnjrJAFwSfT9oUAt/HAp2pNrZ+xPM1k0iYkJj0BxalPNAgxv2t6l5WEtAb/bNwzjvO2J5/3/YtmGfdM9QpzWjMWs2IGcJ2FQ36mDoRxWC+CKkNGq0hQJbVrojX/mr78GgIhnHbLgqr4lNp3ul2Vm4qHfRD04Q8eKJ8vdHJgi55ytxq8RU9zV8n3J5T4Q8zmlPTu6cP4q+siTL3HqfwghHz4rSGsmvVcsEyS+ctnhsaqHyoOgUIg+2WyIlW4rkYbmCCeuBT81JI941R/HHuExHazxKgj960KWkgtdzGMHLqN22V3wnFlc1WZben9h9YEYAymTrmRTUDAwZ8XohMJuMh9cvpR6YR9hXlyYXTwNZT6lm2cILbDU+vcn5fXVlOygHWWfIkKCvR6nD04XWvvPXG1aHzq8RoFJCfGFUplQh0ZM4VuNdDKdXpuMnptb29FYxUP+q7oYjtAswoahdgnA9f2OCDpP9UW8QuUxKpVJMgRPsuTTA0t1I37BCtjRQdry6zIs8nfYwwL5YIkj4kia6xDCMIeAHpOvQlhRzi3+w+hvp54lOubYMidFmKHJMZBgSn8=
