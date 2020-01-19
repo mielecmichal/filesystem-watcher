@@ -1,13 +1,13 @@
-package pl.mielecmichal.filesystemmonitor;
+package io.github.filesystemwatcher;
 
+import io.github.filesystemwatcher.utilities.AwaitilityUtils;
+import io.github.filesystemwatcher.utilities.FilesystemUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import pl.mielecmichal.filesystemmonitor.utilities.AwaitilityUtils;
-import pl.mielecmichal.filesystemmonitor.utilities.FilesystemUtils;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
