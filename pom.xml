@@ -157,7 +157,7 @@
                 <sonar.login>${env.SONARCLOUD_TOKEN}</sonar.login>
                 <sonar.organization>filesystem-watcher</sonar.organization>
                 <sonar.projectKey>filesystem-watcher</sonar.projectKey>
-                <sonar.branch>${env.TRAVIS_BRANCH}</sonar.branch>
+                <sonar.branch.name>${env.TRAVIS_BRANCH}</sonar.branch.name>
             </properties>
 
 
