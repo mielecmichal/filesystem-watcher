@@ -1,9 +1,7 @@
-package pl.mielecmichal.filesystemmonitor;
+package io.github.filesystemwatcher;
 
 import lombok.Builder;
-import lombok.Value;
 import lombok.experimental.NonFinal;
-import lombok.experimental.Wither;
 
 import java.nio.file.Path;
 import java.util.UUID;

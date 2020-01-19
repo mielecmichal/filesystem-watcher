@@ -1,8 +1,9 @@
-package pl.mielecmichal.filesystemmonitor;
+package io.github.filesystemwatcher;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import lombok.With;
 import lombok.experimental.Wither;
 
 import java.io.IOException;
@@ -15,11 +16,11 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import static pl.mielecmichal.filesystemmonitor.FilesystemEventType.DELETED;
+import static io.github.filesystemwatcher.FilesystemEventType.DELETED;
 
 @Value
 @Builder
-@Wither
+@With
 public class FilesystemConstraints implements Predicate<FilesystemEvent> {
 
     @RequiredArgsConstructor
