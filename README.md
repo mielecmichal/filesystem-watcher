@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/filesystem-watcher/filesystem-watcher.svg?branch=master)](https://travis-ci.org/filesystem-watcher/filesystem-watcher)
+
 # Filesystem Watcher
 Watch for filesystem changes in you Java project in simple and robust way.
 Project utilize Java 7 APIs like WatchService (which does not pool filesystem for changes in most common environments) 
