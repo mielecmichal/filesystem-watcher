@@ -13,7 +13,7 @@ before_install:
     fi;
     export MAVEN_CHANGELIST;
 install: skip
-script: "./mvnw deploy sonar:sonar -P release --settings settings.xml -Dchangelist=${MAVEN_CHANGELIST} -B"
+script: "./mvnw sonar:sonar deploy -P release --settings settings.xml -Dchangelist=${MAVEN_CHANGELIST} -B"
 env:
   global:
     # GPG_PASSPHRASE
