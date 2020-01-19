@@ -3,6 +3,7 @@ package io.github.filesystemwatcher;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import lombok.With;
 import lombok.experimental.Wither;
 
 import java.io.IOException;
@@ -19,7 +20,7 @@ import static io.github.filesystemwatcher.FilesystemEventType.DELETED;
 
 @Value
 @Builder
-@Wither
+@With
 public class FilesystemConstraints implements Predicate<FilesystemEvent> {
 
     @RequiredArgsConstructor
