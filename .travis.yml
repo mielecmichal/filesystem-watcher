@@ -7,13 +7,13 @@ before_install:
   - gpg2 --version
   - gpg2 --batch --import signing_key.gpg
   - if [ "${TRAVIS_BRANCH}" = "master" ]; then
-      MAVEN_CHANGELIST='';
+    MAVEN_CHANGELIST='';
     else
-      MAVEN_CHANGELIST='-SNAPSHOT';
+    MAVEN_CHANGELIST='-SNAPSHOT';
     fi;
     export MAVEN_CHANGELIST;
 install: skip
-script: "./mvnw sonar:sonar deploy -P release --settings settings.xml -Dchangelist=${MAVEN_CHANGELIST} -B"
+script: "./mvnw deploy sonar:sonar -P release --settings settings.xml -Dchangelist=${MAVEN_CHANGELIST} -B"
 env:
   global:
     # GPG_PASSPHRASE
@@ -24,3 +24,6 @@ env:
     - secure: vrpOE0vl40d3O62MuMs36veo/eRG44pWVrVKK/IynMHs7Cy5WKA480rNGd2A9roHJIZ8wE+ve5B9JtBNfhzxfArZSo8v0rcJkQp7Rzhybg1RTd8rYuRqUE+pEK+7wa/DvrCos2ljle0LIxkpfvLVuTt96AyoWUrlz9R7D48BhT5ydmYXpZTT8yySdwbQH+tqS6t+zOkiyrGDcxxIVYyimsIBIBMoes5Hp+4O4Z+gVx9+G0SoLhHsoT2Q/3vEWLe+pI1JjXlw8sVqvWzLKVrq82EauWVnIlrIWmwgGm5IrLiezxzKXffrBs/937YKbNAjpZEsjeWkvVDx98buCY5UJ/ggN1AE+xGGVhsuXBC88N3pE17RejnFLuH2MLnMbJ5by4ZVSzLxaw8ZXtaT2U2Wu2DcdXAKg5+F5MQndaCTMObod27OzDk4OgWRZEuIlamRo2Dy66LjVNndhVTeIJts7BuhxsWvdTy2O3smKV4rSSd6YA+mzCp8pxfNrNEZQYTr6gFsZ/ff1z+XKi5cJiAXgoTo88PUhnAE4sXabapfPxwkWUtr53yVMWbdrbBYxyz57Jc0BlUfJrYKGFdlJl05cwoPUc3jm5aFP8ztqdKImgqBOmEIymoo4cY/elhjTUZ38aFuhTMhjjh4IZFPDHO36iNy04ttjhpGXiu9scJE9Fw=
     # SONARCLOUD_TOKEN
     - secure: YtRumCkbMsYEGJBs1mrsghgpOZulBvrZEPMrJim00+raSDwm/dkR+SF0+w2BJjU28zcxUeoUc3Jnw7Uja9auh7Xm+Aae5F2yPEi3LSr5RPijhgdsc2L8e5wCXA4U1GsMd1XbCpz2sAPGkIzCmzzg6ZkjKT41g4mZDEBZBNlhmyilDEKjr8WzlRHgL1K+d/N5lEOZPONs51fOc+FrLlcPb38OBcEtyZAkBoljndMC3PmqfGaMlYCa4wgt3euluoyV8/4pSs5nti8TRZ+flrjgCdT/NyZtJOg8guuqqa7ngYi7wPJ71kzaVGZRSezHk7KQOmG3QQl9wNdyFE3f/dVLhkQAbcYkZgWAxUp18EW3x5bakyhVA99WIinHp5E0XnDzYDRpXw/p4eXYNLpblQfqt7/baCjR5Zb5j+Ght5M/N+arLj20DUqQ4muTH1u3ar47ch+OBNWzeqit5YfO+igr6ZOvhiLWRkthtYrzbS7UpQ0Zyfzji5gfQSGglCNfZ+6tDm6olD9/KFXeER2fwcbpy0OoQHahf1mukoG9l0IvV+8IqzdN+m1ExuUOdoeE2sI7qT/3lDQxMViNRh3EFISnyf/XJnicIE/s0/YYL/n3ZHgsu+pDFBsyqQAsJXSiRtT+VwpkL3XbSWCqXKCGDRPveKTAPYyniEjz8w7/Y6S7MU4=
+cache:
+  directories:
+    - $HOME/.m2
