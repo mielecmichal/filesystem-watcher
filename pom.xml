@@ -155,7 +155,7 @@
             <properties>
                 <sonar.host.url>https://sonarcloud.io</sonar.host.url>
                 <sonar.login>${env.SONARCLOUD_TOKEN}</sonar.login>
-                <sonar.organisation>filesystem-watcher</sonar.organisation>
+                <sonar.organization>filesystem-watcher</sonar.organization>
                 <sonar.projectKey>filesystem-watcher</sonar.projectKey>
                 <sonar.branch>${env.TRAVIS_BRANCH}</sonar.branch>
             </properties>
