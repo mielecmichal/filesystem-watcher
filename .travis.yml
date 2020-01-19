@@ -16,7 +16,7 @@ before_install:
     export MAVEN_CHANGELIST;
 
 install: skip
-script: ./mvnw deploy -P release --settings settings.xml Dchangelist=${MAVEN_CHANGELIST} -B
+script: ./mvnw deploy -P release --settings settings.xml -Dchangelist=${MAVEN_CHANGELIST} -B
 
 env:
   global:
