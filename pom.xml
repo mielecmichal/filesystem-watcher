@@ -26,6 +26,18 @@
 
     <url>https://filesystem-watcher.github.io</url>
 
+    <developers>
+        <developer>
+            <id>mielecmichal</id>
+            <name>Michał Mielec</name>
+            <email>mielecmichal@gmail.com</email>
+            <timezone>+1</timezone>
+            <roles>
+                <role>The Project Emperor</role>
+            </roles>
+        </developer>
+    </developers>
+
     <licenses>
         <license>
             <name>MIT License</name>
