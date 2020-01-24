@@ -180,7 +180,6 @@
                             <serverId>ossrh</serverId>
                             <nexusUrl>https://oss.sonatype.org/</nexusUrl>
                             <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                            <stagingProfileId>io.github.filesystem-watcher</stagingProfileId>
                         </configuration>
                     </plugin>
                     <!-- Sources JAR -->
