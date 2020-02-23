@@ -13,6 +13,12 @@
         <changelist>-SNAPSHOT</changelist>
         <maven.compiler.release>11</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.login>${env.SONARCLOUD_TOKEN}</sonar.login>
+        <sonar.organization>filesystem-watcher</sonar.organization>
+        <sonar.projectKey>filesystem-watcher</sonar.projectKey>
+        <sonar.branch.name>${env.TRAVIS_BRANCH}</sonar.branch.name>
     </properties>
 
     <name>Filesystem Watcher</name>
@@ -163,15 +169,6 @@
                     <url>https://oss.sonatype.org/content/repositories/snapshots</url>
                 </snapshotRepository>
             </distributionManagement>
-
-            <properties>
-                <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-                <sonar.login>${env.SONARCLOUD_TOKEN}</sonar.login>
-                <sonar.organization>filesystem-watcher</sonar.organization>
-                <sonar.projectKey>filesystem-watcher</sonar.projectKey>
-                <sonar.branch.name>${env.TRAVIS_BRANCH}</sonar.branch.name>
-            </properties>
-
 
             <build>
                 <plugins>
