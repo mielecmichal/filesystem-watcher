@@ -29,7 +29,6 @@ deploy:
     script: ./mvnw deploy -P release -B -Dmaven.test.skip=true
     on:
       os: linux
-      all_branches: true
       condition: $TRAVIS_BRANCH != master
 
 env:
