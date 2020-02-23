@@ -16,17 +16,17 @@ before_install: ./travis/import_signing_key.sh
 
 install: skip
 
-script: ./mvnw test sonar:sonar -B
+script: ./mvnw test sonar:sonar --settings travis/settings.xml -B
 
 deploy:
   - provider: script
-    script: ./mvnw deploy -P release --settings travis/settings.xml -B -Dmaven.test.skip=true -Dchangelist=""
+    script: ./mvnw deploy -P release -B -Dmaven.test.skip=true -Dchangelist=""
     on:
       os: linux
       branch: master
 
   - provider: script
-    script: ./mvnw deploy -P release --settings travis/settings.xml -B -Dmaven.test.skip=true
+    script: ./mvnw deploy -P release -B -Dmaven.test.skip=true
     on:
       os: linux
       all_branches: true
