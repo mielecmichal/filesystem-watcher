@@ -2,18 +2,26 @@ language: java
 os: linux
 dist: bionic
 jdk: openjdk11
+
 before_install:
   - openssl aes-256-cbc -K $encrypted_92bb71d8d05e_key -iv $encrypted_92bb71d8d05e_iv -in signing_key.gpg.enc -out signing_key.gpg -d
   - gpg2 --version
   - gpg2 --batch --import signing_key.gpg
-  - if [ "${TRAVIS_BRANCH}" = "master" ]; then
-    MAVEN_CHANGELIST='';
-    else
-    MAVEN_CHANGELIST='-SNAPSHOT';
-    fi;
-    export MAVEN_CHANGELIST;
+  -
 install: skip
-script: "./mvnw deploy sonar:sonar -P release --settings settings.xml -Dchangelist=${MAVEN_CHANGELIST} -B"
+
+script: ./mvnw test -B
+
+deploy:
+  - provider: script
+    script: ./mvnw deploy sonar:sonar -P release --settings settings.xml -B -Dmaven.test.skip=true
+    if:
+      - branch = master AND os = linux
+
+  - provider: script
+    script: ./mvnw deploy sonar:sonar -P release --settings settings.xml -B -Dmaven.test.skip=true -Dchangelist="-SNAPSHOT"
+    if:
+      - branch != master AND os = linux
 env:
   global:
     # GPG_PASSPHRASE
