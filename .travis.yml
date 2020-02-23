@@ -12,25 +12,21 @@ jobs:
       osx_image: xcode11
       jdk: openjdk11
 
-before_install:
-  - |
-  - if [ "${TRAVIS_OS_NAME}" != "osx" ]; then
-  - openssl aes-256-cbc -K $encrypted_92bb71d8d05e_key -iv $encrypted_92bb71d8d05e_iv -in signing_key.gpg.enc -out signing_key.gpg -d
-  - gpg2 --batch --import signing_key.gpg
-  - fi
+before_install: ./travis/import_signing_key.sh
+
 install: skip
 
-script: ./mvnw test -B
+script: ./mvnw test sonar:sonar -B
 
 deploy:
   - provider: script
-    script: ./mvnw deploy sonar:sonar -P release --settings settings.xml -B -Dmaven.test.skip=true
+    script: ./mvnw deploy -P release --settings travis/settings.xml -B -Dmaven.test.skip=true -Dchangelist=""
     on:
       os: linux
       branch: master
 
   - provider: script
-    script: ./mvnw deploy sonar:sonar -P release --settings settings.xml -B -Dmaven.test.skip=true -Dchangelist="-SNAPSHOT"
+    script: ./mvnw deploy -P release --settings travis/settings.xml -B -Dmaven.test.skip=true
     on:
       os: linux
       all_branches: true
