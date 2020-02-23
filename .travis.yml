@@ -15,13 +15,17 @@ script: ./mvnw test -B
 deploy:
   - provider: script
     script: ./mvnw deploy sonar:sonar -P release --settings settings.xml -B -Dmaven.test.skip=true
-    if:
-      - branch = master AND os = linux
+    on:
+      os: linux
+      branch: master
 
   - provider: script
     script: ./mvnw deploy sonar:sonar -P release --settings settings.xml -B -Dmaven.test.skip=true -Dchangelist="-SNAPSHOT"
-    if:
-      - branch != master AND os = linux
+    on:
+      os: linux
+      all_branches: true
+      condition: $TRAVIS_BRANCH != master
+
 env:
   global:
     # GPG_PASSPHRASE
