@@ -1,4 +1,4 @@
 
-choco install openjdk11 -params 'installdir=c:\\jdk' -y
-export JAVA_HOME=${JAVA_HOME:-/c/jdk}
+choco install openjdk11 --install-directory C:\\openjdk11
+export JAVA_HOME=C:\\openjdk11
 export PATH=${JAVA_HOME}/bin:${PATH}
