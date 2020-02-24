@@ -23,6 +23,7 @@ jobs:
       script: ./mvnw test --settings travis/settings.xml -B
     - stage: test
       os: windows
+      language: shell
       before_install: choco install openjdk11
       script: ./mvnw test --settings travis/settings.xml -B
     - stage: deploy
