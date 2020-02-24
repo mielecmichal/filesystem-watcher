@@ -1,35 +1,40 @@
 language: java
 
+cache:
+  directories:
+    - $HOME/.m2
+
 jobs:
   include:
-    - os: linux
+    - stage: test
+      os: linux
       dist: bionic
       jdk: openjdk11
-    - os: linux
+      script: ./mvnw test --settings travis/settings.xml -B
+    - stage: test
+      os: linux
       dist: bionic
       jdk: openjdk13
-    - os: osx
+      script: ./mvnw test --settings travis/settings.xml -B
+    - stage: test
+      os: osx
       osx_image: xcode11
       jdk: openjdk11
+      script: ./mvnw test --settings travis/settings.xml -B
+    - stage: deploy
+      before_deploy: ./travis/import_signing_key.sh
+      deploy:
+        - provider: script
+          script: ./mvnw deploy sonar:sonar -P release -B -Dmaven.test.skip=true -Dchangelist=""
+          on:
+            os: linux
+            branch: master
 
-before_install: ./travis/import_signing_key.sh
-
-install: skip
-
-script: ./mvnw test sonar:sonar --settings travis/settings.xml -B
-
-deploy:
-  - provider: script
-    script: ./mvnw deploy -P release -B -Dmaven.test.skip=true -Dchangelist=""
-    on:
-      os: linux
-      branch: master
-
-  - provider: script
-    script: ./mvnw deploy -P release -B -Dmaven.test.skip=true
-    on:
-      os: linux
-      condition: $TRAVIS_BRANCH != master
+        - provider: script
+          script: ./mvnw deploy -P release -B -Dmaven.test.skip=true
+          on:
+            os: linux
+            condition: $TRAVIS_BRANCH != master
 
 env:
   global:
@@ -41,6 +46,3 @@ env:
     - secure: vrpOE0vl40d3O62MuMs36veo/eRG44pWVrVKK/IynMHs7Cy5WKA480rNGd2A9roHJIZ8wE+ve5B9JtBNfhzxfArZSo8v0rcJkQp7Rzhybg1RTd8rYuRqUE+pEK+7wa/DvrCos2ljle0LIxkpfvLVuTt96AyoWUrlz9R7D48BhT5ydmYXpZTT8yySdwbQH+tqS6t+zOkiyrGDcxxIVYyimsIBIBMoes5Hp+4O4Z+gVx9+G0SoLhHsoT2Q/3vEWLe+pI1JjXlw8sVqvWzLKVrq82EauWVnIlrIWmwgGm5IrLiezxzKXffrBs/937YKbNAjpZEsjeWkvVDx98buCY5UJ/ggN1AE+xGGVhsuXBC88N3pE17RejnFLuH2MLnMbJ5by4ZVSzLxaw8ZXtaT2U2Wu2DcdXAKg5+F5MQndaCTMObod27OzDk4OgWRZEuIlamRo2Dy66LjVNndhVTeIJts7BuhxsWvdTy2O3smKV4rSSd6YA+mzCp8pxfNrNEZQYTr6gFsZ/ff1z+XKi5cJiAXgoTo88PUhnAE4sXabapfPxwkWUtr53yVMWbdrbBYxyz57Jc0BlUfJrYKGFdlJl05cwoPUc3jm5aFP8ztqdKImgqBOmEIymoo4cY/elhjTUZ38aFuhTMhjjh4IZFPDHO36iNy04ttjhpGXiu9scJE9Fw=
     # SONARCLOUD_TOKEN
     - secure: S04AigYRfIKbAFsPwgzjlG0yfPfFrw9vfktb4sFxHBv6I40gAj+gyXoNbN+3+vyDkOyh2/Tu7OboI0PMXT9N7fE5vIlqJmV3Iw4KFSFVz+A7Ne3jUKfMZeODA2CwSEtFZupC/tAr0d4N0QLt1AWcPthB3AsWC3F23Wj+ekIonFesaUBDy++8+lt0Ms0SL//+NhMhEaqtKttS2dMRcEZ+jrRnbwnGffdUd8q8cVc4TBb6ZQuf3slGGmSo7SIkqTnkdDoJzTodNB/6vyaD3GJLJluxPgPVfjNv7FtMuW+kEwdDjYCU+eUc7nDzkg7WcLV/+A3bUh96azxhKy/To5LHWFZE9soXB4j3NvuwS6Wkhu4SKMKc8dwaDyRH+ArcUa8so2MNs7a766R4+MeLfQfkbHbvaj93MTyMthYQkkb2qUtTJjDaZ3H1/jKOqQM/vYVcYHRtSt4RhATSETqyExX8kVpIWmiApgGZQssdA7NU9eRM18lU2dGAlbaJcR/8igMo4QIfIrGE49FhoVpR94PUSCJEiRKmQqNtF6A9AvnAAEZKVjWiDVqiScOVV+v42ZlaEjU1iCFbs6XI2q86By6s8XhNyW6oA5xn920DlqFnFmrHLEs9FQnLkZTZBKByJp3zmgufulepBIfPPiD+3H0gX/nT40E4hVJvoWHLaHKfz/8=
-cache:
-  directories:
-    - $HOME/.m2
