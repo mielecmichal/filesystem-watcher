@@ -24,7 +24,7 @@ jobs:
     - stage: test
       os: windows
       language: shell
-      before_install: choco install openjdk11
+      before_install: choco install openjdk11 && refreshenv
       script: ./mvnw test --settings travis/settings.xml -B
     - stage: deploy
       before_deploy: ./travis/import_signing_key.sh
