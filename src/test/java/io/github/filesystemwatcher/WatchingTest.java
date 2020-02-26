@@ -8,6 +8,8 @@ import io.vavr.collection.Array;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -115,6 +117,7 @@ class WatchingTest {
     }
 
     @ParameterizedTest
+    @EnabledOnOs({OS.LINUX, OS.WINDOWS})
     @MethodSource("allModificationKindsOnAllPathKinds")
     void shouldWatchModifications(PathKind pathKind, ModificationKind strategy, @TempDir Path temporaryDirectory) throws InterruptedException {
         //given
