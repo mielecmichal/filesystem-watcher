@@ -17,13 +17,13 @@ public class AwaitilityUtils {
     public static <T> void awaitForSize(Collection<T> collection, int expectedSize) {
         Awaitility.await()
                 .atMost(DEFAULT_WAIT_TIME)
-                .until(() -> collection.size() == expectedSize);
+                .until(() -> collection.size() >= expectedSize);
     }
 
     public static <K, V> void awaitForSize(Map<K, V> map, int expectedSize) {
         Awaitility.await()
                 .atMost(DEFAULT_WAIT_TIME)
-                .until(() -> map.size() == expectedSize);
+                .until(() -> map.size() >= expectedSize);
     }
 
     private static Duration findWaitingDuration() {
