@@ -28,8 +28,21 @@ public class FilesystemUtils {
         return TryIO.with(() -> Files.createFile(path.resolve(name)));
     }
 
+    public static Path createTempDirectory(String prefix) {
+        return TryIO.with(() -> Files.createTempDirectory(prefix));
+    }
+
+    //TODO simplify the signature
     public static Path createLink(Path linkTarget, String linkName, Path linkPlace) {
         return TryIO.with(() -> Files.createSymbolicLink(linkPlace.resolve(linkName), linkTarget));
+    }
+
+    public static Path writeFile(Path path, String content) {
+        return TryIO.with(() -> Files.write(path, content.getBytes()));
+    }
+
+    public static Path move(Path source, Path target) {
+        return TryIO.with(() -> Files.move(source, target));
     }
 
     public static Set<PosixFilePermission> getPosixFilePermissions(Path path) {

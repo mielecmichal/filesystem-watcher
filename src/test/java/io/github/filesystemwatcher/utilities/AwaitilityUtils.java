@@ -20,12 +20,6 @@ public class AwaitilityUtils {
                 .until(() -> collection.size() >= expectedSize);
     }
 
-    public static <K, V> void awaitForSize(Map<K, V> map, int expectedSize) {
-        Awaitility.await()
-                .atMost(DEFAULT_WAIT_TIME)
-                .until(() -> map.size() >= expectedSize);
-    }
-
     private static Duration findWaitingDuration() {
         int poolingFrequencyInSeconds = SensitivityWatchEventModifier.HIGH.sensitivityValueInSeconds();
         Duration defaultWaitTimeForPooling = Duration.ofSeconds(5 * poolingFrequencyInSeconds);
