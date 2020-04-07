@@ -113,10 +113,9 @@ public class FilesystemWatcher implements FilesystemNotifier {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 FilesystemEvent event = blockingQueue.take();
-
                 Path path = event.getPath();
-                if (Files.isDirectory(path)) {
-                    if (List.of(CREATED, INITIAL).contains(event.getEventType())) {
+                if (List.of(CREATED, INITIAL).contains(event.getEventType())) {
+                    if (Files.isDirectory(path)) {
                         startWatching(path);
                         // TODO refactor
                         if (CREATED == event.getEventType()) {
@@ -130,9 +129,9 @@ public class FilesystemWatcher implements FilesystemNotifier {
                                     }).build()
                                     .startWatching();
                         }
-                    } else if (DELETED == event.getEventType()) {
-                        stopWatching(path);
                     }
+                } else if (DELETED == event.getEventType()) {
+                    stopWatching(path);
                 }
                 log.info("Consumed event: " + event);
 
