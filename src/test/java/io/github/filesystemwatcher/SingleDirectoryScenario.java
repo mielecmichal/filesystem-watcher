@@ -2,6 +2,8 @@ package io.github.filesystemwatcher;
 
 import io.github.filesystemwatcher.utilities.FilesystemUtils;
 import io.github.filesystemwatcher.utilities.WatchCoordinator;
+import io.github.filesystemwatcher.utilities.WatchImplementation;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
@@ -12,16 +14,19 @@ import java.util.Set;
 import static io.github.filesystemwatcher.FilesystemEventType.*;
 
 @RequiredArgsConstructor
-enum SingleDirectoryScenario implements Scenario{
+enum SingleDirectoryScenario implements Scenario {
 
-    DIRECTORY_CREATE(SingleDirectoryScenario::create),
-    DIRECTORY_DELETE(SingleDirectoryScenario::delete),
-    DIRECTORY_RENAME(SingleDirectoryScenario::rename),
-    DIRECTORY_ADD_POSIX_PERMISSIONS(SingleDirectoryScenario::addPermissions),
-    DIRECTORY_REMOVE_POSIX_PERMISSIONS(SingleDirectoryScenario::removePermissions),
-    DIRECTORY_SET_SAME_PERMISSIONS(SingleDirectoryScenario::setSamePermissions);
+    DIRECTORY_CREATE(SingleDirectoryScenario::create, WatchImplementation.all()),
+    DIRECTORY_DELETE(SingleDirectoryScenario::delete, WatchImplementation.all()),
+    DIRECTORY_RENAME(SingleDirectoryScenario::rename, WatchImplementation.all()),
+    DIRECTORY_ADD_POSIX_PERMISSIONS(SingleDirectoryScenario::addPermissions, List.of(WatchImplementation.NATIVE)),
+    DIRECTORY_REMOVE_POSIX_PERMISSIONS(SingleDirectoryScenario::removePermissions, List.of(WatchImplementation.NATIVE)),
+    DIRECTORY_SET_SAME_PERMISSIONS(SingleDirectoryScenario::setSamePermissions, List.of(WatchImplementation.NATIVE));
 
     private final Scenario scenario;
+
+    @Getter
+    private final List<WatchImplementation> implementations;
 
     @Override
     public List<FilesystemEvent> apply(Path path, WatchCoordinator watchCoordinator) {

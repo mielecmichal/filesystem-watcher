@@ -2,27 +2,31 @@ package io.github.filesystemwatcher;
 
 import io.github.filesystemwatcher.utilities.FilesystemUtils;
 import io.github.filesystemwatcher.utilities.WatchCoordinator;
+import io.github.filesystemwatcher.utilities.WatchImplementation;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import static io.github.filesystemwatcher.FilesystemEventType.*;
-import static io.github.filesystemwatcher.FilesystemEventType.MODIFIED;
 
 @RequiredArgsConstructor
 enum RecursiveDirectoryScenario implements Scenario {
 
-    RECURSIVE_DIRECTORY_CREATE(RecursiveDirectoryScenario::create),
-    RECURSIVE_DIRECTORY_DELETE(RecursiveDirectoryScenario::delete),
-    RECURSIVE_DIRECTORY_RENAME(RecursiveDirectoryScenario::rename),
-    RECURSIVE_DIRECTORY_ADD_POSIX_PERMISSIONS(RecursiveDirectoryScenario::addPermissions),
-    RECURSIVE_DIRECTORY_REMOVE_POSIX_PERMISSIONS(RecursiveDirectoryScenario::removePermissions),
-    RECURSIVE_DIRECTORY_SET_SAME_PERMISSIONS(RecursiveDirectoryScenario::setSamePermissions);
+    RECURSIVE_DIRECTORY_CREATE(RecursiveDirectoryScenario::create, WatchImplementation.all()),
+    RECURSIVE_DIRECTORY_DELETE(RecursiveDirectoryScenario::delete, WatchImplementation.all()),
+    RECURSIVE_DIRECTORY_RENAME(RecursiveDirectoryScenario::rename, WatchImplementation.all()),
+    RECURSIVE_DIRECTORY_ADD_POSIX_PERMISSIONS(RecursiveDirectoryScenario::addPermissions, List.of(WatchImplementation.NATIVE)),
+    RECURSIVE_DIRECTORY_REMOVE_POSIX_PERMISSIONS(RecursiveDirectoryScenario::removePermissions, List.of(WatchImplementation.NATIVE)),
+    RECURSIVE_DIRECTORY_SET_SAME_PERMISSIONS(RecursiveDirectoryScenario::setSamePermissions, List.of(WatchImplementation.NATIVE));
 
     private final Scenario scenario;
+    @Getter
+    private final List<WatchImplementation> implementations;
 
     @Override
     public List<FilesystemEvent> apply(Path path, WatchCoordinator watchCoordinator) {
@@ -38,12 +42,17 @@ enum RecursiveDirectoryScenario implements Scenario {
 
         Path recursiveDirectory = FilesystemUtils.createFile(third, "recursive");
 
-        return List.of(
+
+        List<FilesystemEvent> initial = new ArrayList<>(List.of(
                 FilesystemEvent.of(first, INITIAL),
                 FilesystemEvent.of(second, INITIAL),
-                FilesystemEvent.of(third, INITIAL),
-                FilesystemEvent.of(recursiveDirectory, CREATED)
-        );
+                FilesystemEvent.of(third, INITIAL)));
+
+        initial.add(FilesystemEvent.of(recursiveDirectory, CREATED));
+        if (WatchImplementation.determineImplementation() == WatchImplementation.POOLING) {
+            initial.add(FilesystemEvent.of(third, MODIFIED));
+        }
+        return initial;
     }
 
     private static List<FilesystemEvent> delete(Path base, WatchCoordinator coordinator) {
@@ -55,13 +64,18 @@ enum RecursiveDirectoryScenario implements Scenario {
         coordinator.setupCompleted();
 
         FilesystemUtils.delete(recursiveDirectory);
-        return List.of(
+
+        List<FilesystemEvent> initial = new ArrayList<>(List.of(
                 FilesystemEvent.of(first, INITIAL),
                 FilesystemEvent.of(second, INITIAL),
                 FilesystemEvent.of(third, INITIAL),
-                FilesystemEvent.of(recursiveDirectory, INITIAL),
-                FilesystemEvent.of(recursiveDirectory, DELETED)
-        );
+                FilesystemEvent.of(recursiveDirectory, INITIAL)));
+
+        initial.add(FilesystemEvent.of(recursiveDirectory, DELETED));
+        if (WatchImplementation.determineImplementation() == WatchImplementation.POOLING) {
+            initial.add(FilesystemEvent.of(third, MODIFIED));
+        }
+        return initial;
     }
 
     //TODO move not empty dir?
@@ -75,14 +89,19 @@ enum RecursiveDirectoryScenario implements Scenario {
         coordinator.setupCompleted();
 
         Path moved = FilesystemUtils.move(recursiveDirectory, third.resolve("moved"));
-        return List.of(
+
+        List<FilesystemEvent> initial = new ArrayList<>(List.of(
                 FilesystemEvent.of(first, INITIAL),
                 FilesystemEvent.of(second, INITIAL),
                 FilesystemEvent.of(third, INITIAL),
-                FilesystemEvent.of(recursiveDirectory, INITIAL),
-                FilesystemEvent.of(recursiveDirectory, DELETED),
-                FilesystemEvent.of(moved, CREATED)
-        );
+                FilesystemEvent.of(recursiveDirectory, INITIAL)));
+
+        initial.add(FilesystemEvent.of(moved, CREATED));
+        initial.add(FilesystemEvent.of(recursiveDirectory, DELETED));
+        if (WatchImplementation.determineImplementation() == WatchImplementation.POOLING) {
+            initial.add(FilesystemEvent.of(third, MODIFIED));
+        }
+        return initial;
     }
 
     private static List<FilesystemEvent> addPermissions(Path base, WatchCoordinator coordinator) {

@@ -2,6 +2,7 @@ package io.github.filesystemwatcher;
 
 import io.github.filesystemwatcher.utilities.FilesystemUtils;
 import io.github.filesystemwatcher.utilities.WatchCoordinator;
+import io.github.filesystemwatcher.utilities.WatchImplementation;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -11,19 +12,20 @@ import java.util.List;
 import java.util.Set;
 
 import static io.github.filesystemwatcher.FilesystemEventType.*;
-import static io.github.filesystemwatcher.FilesystemEventType.MODIFIED;
 
 @RequiredArgsConstructor
-enum SymlinkDirectoryScenario implements Scenario{
+enum SymlinkDirectoryScenario implements Scenario {
 
-    SYMLINK_DIRECTORY_CREATE(SymlinkDirectoryScenario::create),
-    SYMLINK_DIRECTORY_DELETE(SymlinkDirectoryScenario::delete),
-    SYMLINK_DIRECTORY_RENAME(SymlinkDirectoryScenario::rename),
-    SYMLINK_DIRECTORY_ADD_POSIX_PERMISSIONS(SymlinkDirectoryScenario::addPermissions),
-    SYMLINK_DIRECTORY_REMOVE_POSIX_PERMISSIONS(SymlinkDirectoryScenario::removePermissions),
-    SYMLINK_DIRECTORY_SET_SAME_PERMISSIONS(SymlinkDirectoryScenario::setSamePermissions);
+    SYMLINK_DIRECTORY_CREATE(SymlinkDirectoryScenario::create, WatchImplementation.all()),
+    SYMLINK_DIRECTORY_DELETE(SymlinkDirectoryScenario::delete, WatchImplementation.all()),
+    SYMLINK_DIRECTORY_RENAME(SymlinkDirectoryScenario::rename, WatchImplementation.all()),
+    SYMLINK_DIRECTORY_ADD_POSIX_PERMISSIONS(SymlinkDirectoryScenario::addPermissions, List.of(WatchImplementation.NATIVE)),
+    SYMLINK_DIRECTORY_REMOVE_POSIX_PERMISSIONS(SymlinkDirectoryScenario::removePermissions, List.of(WatchImplementation.NATIVE)),
+    SYMLINK_DIRECTORY_SET_SAME_PERMISSIONS(SymlinkDirectoryScenario::setSamePermissions, List.of(WatchImplementation.NATIVE));
 
     private final Scenario scenario;
+    @Getter
+    private final List<WatchImplementation> implementations;
 
     @Override
     public List<FilesystemEvent> apply(Path path, WatchCoordinator watchCoordinator) {

@@ -2,6 +2,8 @@ package io.github.filesystemwatcher;
 
 import io.github.filesystemwatcher.utilities.FilesystemUtils;
 import io.github.filesystemwatcher.utilities.WatchCoordinator;
+import io.github.filesystemwatcher.utilities.WatchImplementation;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
@@ -14,14 +16,16 @@ import static io.github.filesystemwatcher.FilesystemEventType.*;
 @RequiredArgsConstructor
 enum SymlinkFileScenario implements Scenario {
 
-    SYMLINK_FILE_CREATE(SymlinkFileScenario::create),
-    SYMLINK_FILE_DELETE(SymlinkFileScenario::delete),
-    SYMLINK_FILE_MODIFY_CONTENT(SymlinkFileScenario::modifyContent),
-    SYMLINK_FILE_ADD_POSIX_PERMISSIONS(SymlinkFileScenario::addPermissions),
-    SYMLINK_FILE_REMOVE_POSIX_PERMISSIONS(SymlinkFileScenario::removePermissions),
-    SYMLINK_FILE_SET_SAME_PERMISSIONS(SymlinkFileScenario::setSamePermissions);
+    SYMLINK_FILE_CREATE(SymlinkFileScenario::create, WatchImplementation.all()),
+    SYMLINK_FILE_DELETE(SymlinkFileScenario::delete, WatchImplementation.all()),
+    SYMLINK_FILE_MODIFY_CONTENT(SymlinkFileScenario::modifyContent, WatchImplementation.all()),
+    SYMLINK_FILE_ADD_POSIX_PERMISSIONS(SymlinkFileScenario::addPermissions, List.of(WatchImplementation.NATIVE)),
+    SYMLINK_FILE_REMOVE_POSIX_PERMISSIONS(SymlinkFileScenario::removePermissions, List.of(WatchImplementation.NATIVE)),
+    SYMLINK_FILE_SET_SAME_PERMISSIONS(SymlinkFileScenario::setSamePermissions, List.of(WatchImplementation.NATIVE));
 
     private final Scenario scenario;
+    @Getter
+    private final List<WatchImplementation> implementations;
 
     @Override
     public List<FilesystemEvent> apply(Path path, WatchCoordinator watchCoordinator) {

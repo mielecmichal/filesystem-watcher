@@ -2,26 +2,31 @@ package io.github.filesystemwatcher;
 
 import io.github.filesystemwatcher.utilities.FilesystemUtils;
 import io.github.filesystemwatcher.utilities.WatchCoordinator;
+import io.github.filesystemwatcher.utilities.WatchImplementation;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import static io.github.filesystemwatcher.FilesystemEventType.*;
 
 @RequiredArgsConstructor
-enum RecursiveFileScenario implements Scenario{
+enum RecursiveFileScenario implements Scenario {
 
-    RECURSIVE_FILE_CREATE(RecursiveFileScenario::create),
-    RECURSIVE_FILE_DELETE(RecursiveFileScenario::delete),
-    RECURSIVE_FILE_RENAME(RecursiveFileScenario::rename),
-    RECURSIVE_FILE_ADD_POSIX_PERMISSIONS(RecursiveFileScenario::addPermissions),
-    RECURSIVE_FILE_REMOVE_POSIX_PERMISSIONS(RecursiveFileScenario::removePermissions),
-    RECURSIVE_FILE_SET_SAME_PERMISSIONS(RecursiveFileScenario::setSamePermissions);
+    RECURSIVE_FILE_CREATE(RecursiveFileScenario::create, WatchImplementation.all()),
+    RECURSIVE_FILE_DELETE(RecursiveFileScenario::delete, WatchImplementation.all()),
+    RECURSIVE_FILE_RENAME(RecursiveFileScenario::rename, WatchImplementation.all()),
+    RECURSIVE_FILE_ADD_POSIX_PERMISSIONS(RecursiveFileScenario::addPermissions, List.of(WatchImplementation.NATIVE)),
+    RECURSIVE_FILE_REMOVE_POSIX_PERMISSIONS(RecursiveFileScenario::removePermissions, List.of(WatchImplementation.NATIVE)),
+    RECURSIVE_FILE_SET_SAME_PERMISSIONS(RecursiveFileScenario::setSamePermissions, List.of(WatchImplementation.NATIVE));
 
     private final Scenario scenario;
+    @Getter
+    private final List<WatchImplementation> implementations;
 
     @Override
     public List<FilesystemEvent> apply(Path path, WatchCoordinator watchCoordinator) {
@@ -36,12 +41,17 @@ enum RecursiveFileScenario implements Scenario{
         coordinator.setupCompleted();
 
         Path createdFile = FilesystemUtils.createFile(third, "test.txt");
-        return List.of(
+
+        List<FilesystemEvent> initial = new ArrayList<>(List.of(
                 FilesystemEvent.of(first, INITIAL),
                 FilesystemEvent.of(second, INITIAL),
-                FilesystemEvent.of(third, INITIAL),
-                FilesystemEvent.of(createdFile, CREATED)
-        );
+                FilesystemEvent.of(third, INITIAL)));
+
+        initial.add(FilesystemEvent.of(createdFile, CREATED));
+        if (WatchImplementation.determineImplementation() == WatchImplementation.POOLING) {
+            initial.add(FilesystemEvent.of(third, MODIFIED));
+        }
+        return initial;
     }
 
     private static List<FilesystemEvent> delete(Path base, WatchCoordinator coordinator) {
@@ -53,13 +63,17 @@ enum RecursiveFileScenario implements Scenario{
         coordinator.setupCompleted();
 
         FilesystemUtils.delete(file);
-        return List.of(
+        List<FilesystemEvent> initial = new ArrayList<>(List.of(
                 FilesystemEvent.of(first, INITIAL),
                 FilesystemEvent.of(second, INITIAL),
                 FilesystemEvent.of(third, INITIAL),
-                FilesystemEvent.of(file, INITIAL),
-                FilesystemEvent.of(file, DELETED)
-        );
+                FilesystemEvent.of(file, INITIAL)));
+
+        initial.add(FilesystemEvent.of(file, DELETED));
+        if (WatchImplementation.determineImplementation() == WatchImplementation.POOLING) {
+            initial.add(FilesystemEvent.of(third, MODIFIED));
+        }
+        return initial;
     }
 
     private static List<FilesystemEvent> rename(Path base, WatchCoordinator coordinator) {
@@ -72,14 +86,18 @@ enum RecursiveFileScenario implements Scenario{
 
         Path moved = FilesystemUtils.move(file, base.resolve("moved.txt"));
 
-        return List.of(
+        List<FilesystemEvent> initial = new ArrayList<>(List.of(
                 FilesystemEvent.of(first, INITIAL),
                 FilesystemEvent.of(second, INITIAL),
                 FilesystemEvent.of(third, INITIAL),
-                FilesystemEvent.of(file, INITIAL),
-                FilesystemEvent.of(moved, CREATED),
-                FilesystemEvent.of(file, DELETED)
-        );
+                FilesystemEvent.of(file, INITIAL)));
+
+        initial.add(FilesystemEvent.of(moved, CREATED));
+        initial.add(FilesystemEvent.of(file, DELETED));
+        if (WatchImplementation.determineImplementation() == WatchImplementation.POOLING) {
+            initial.add(FilesystemEvent.of(third, MODIFIED));
+        }
+        return initial;
     }
 
     private static List<FilesystemEvent> addPermissions(Path base, WatchCoordinator coordinator) {
@@ -144,5 +162,5 @@ enum RecursiveFileScenario implements Scenario{
                 FilesystemEvent.of(file, MODIFIED)
         );
     }
-    
+
 }

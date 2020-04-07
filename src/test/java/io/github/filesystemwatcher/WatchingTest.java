@@ -2,8 +2,8 @@ package io.github.filesystemwatcher;
 
 import io.github.filesystemwatcher.utilities.AwaitilityUtils;
 import io.github.filesystemwatcher.utilities.WatchCoordinator;
+import io.github.filesystemwatcher.utilities.WatchImplementation;
 import org.assertj.core.api.Assertions;
-import org.assertj.core.util.Streams;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -55,6 +55,10 @@ class WatchingTest {
         scenarios.addAll(Arrays.asList(SymlinkDirectoryScenario.values()));
         scenarios.addAll(Arrays.asList(RecursiveFileScenario.values()));
         scenarios.addAll(Arrays.asList(RecursiveDirectoryScenario.values()));
-        return scenarios.stream().map(Arguments::of);
+
+        WatchImplementation currentImplementation = WatchImplementation.determineImplementation();
+        return scenarios.stream()
+                .filter(scenario -> scenario.getImplementations().contains(currentImplementation))
+                .map(Arguments::of);
     }
 }

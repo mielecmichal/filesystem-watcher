@@ -2,6 +2,8 @@ package io.github.filesystemwatcher;
 
 import io.github.filesystemwatcher.utilities.FilesystemUtils;
 import io.github.filesystemwatcher.utilities.WatchCoordinator;
+import io.github.filesystemwatcher.utilities.WatchImplementation;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
@@ -13,22 +15,23 @@ import static io.github.filesystemwatcher.FilesystemEventType.*;
 
 
 @RequiredArgsConstructor
-enum SingleFileScenario implements Scenario{
+enum SingleFileScenario implements Scenario {
 
-    FILE_CREATE(SingleFileScenario::createFile),
-    FILE_DELETE(SingleFileScenario::deleteFile),
-    FILE_MODIFY_CONTENT(SingleFileScenario::modifyFileContent),
-    FILE_ADD_POSIX_PERMISSIONS(SingleFileScenario::addPermissions),
-    FILE_REMOVE_POSIX_PERMISSIONS(SingleFileScenario::removePermissions),
-    FILE_SET_SAME_PERMISSIONS(SingleFileScenario::setSamePermissions);
+    FILE_CREATE(SingleFileScenario::createFile, WatchImplementation.all()),
+    FILE_DELETE(SingleFileScenario::deleteFile, WatchImplementation.all()),
+    FILE_MODIFY_CONTENT(SingleFileScenario::modifyFileContent, List.of(WatchImplementation.NATIVE)),
+    FILE_ADD_POSIX_PERMISSIONS(SingleFileScenario::addPermissions, List.of(WatchImplementation.NATIVE)),
+    FILE_REMOVE_POSIX_PERMISSIONS(SingleFileScenario::removePermissions, List.of(WatchImplementation.NATIVE)),
+    FILE_SET_SAME_PERMISSIONS(SingleFileScenario::setSamePermissions, List.of(WatchImplementation.NATIVE));
 
     private final Scenario scenario;
+    @Getter
+    private final List<WatchImplementation> implementations;
 
     @Override
     public List<FilesystemEvent> apply(Path path, WatchCoordinator watchCoordinator) {
         return scenario.apply(path, watchCoordinator);
     }
-
 
     private static List<FilesystemEvent> createFile(Path base, WatchCoordinator coordinator) {
         coordinator.setupCompleted();
