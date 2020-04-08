@@ -1,5 +1,6 @@
 package io.github.filesystemwatcher;
 
+import com.sun.nio.file.SensitivityWatchEventModifier;
 import io.vavr.collection.List;
 import io.vavr.control.Try;
 import lombok.Builder;
@@ -98,8 +99,8 @@ public class FilesystemWatcher implements FilesystemNotifier {
                     }
 
                     blockingQueue.put(filesystemEvent);
-                    watchedKey.reset();
                 }
+                watchedKey.reset();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } catch (Exception e) {
@@ -153,9 +154,8 @@ public class FilesystemWatcher implements FilesystemNotifier {
             FileSystem fileSystem = FileSystems.getDefault();
             return Try.of(fileSystem::newWatchService).getOrElseThrow(EXCEPTION_SUPPLIER);
         }
-
         private WatchKey registerWatchable(Watchable watchable) {
-            return Try.of(() -> watchable.register(watchService, ALL_EVENT_KINDS)).getOrElseThrow(EXCEPTION_SUPPLIER);
+            return Try.of(() -> watchable.register(watchService, ALL_EVENT_KINDS, SensitivityWatchEventModifier.HIGH)).getOrElseThrow(EXCEPTION_SUPPLIER);
         }
 
         void closeWatchService() {
