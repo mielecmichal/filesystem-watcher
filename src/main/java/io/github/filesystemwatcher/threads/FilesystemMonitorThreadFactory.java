@@ -1,4 +1,4 @@
-package io.github.filesystemwatcher;
+package io.github.filesystemwatcher.threads;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;

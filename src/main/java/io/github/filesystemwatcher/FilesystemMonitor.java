@@ -1,5 +1,7 @@
 package io.github.filesystemwatcher;
 
+import io.github.filesystemwatcher.threads.FilesystemMonitorThreadFactory;
+import io.github.filesystemwatcher.threads.LoggingExecutorService;
 import lombok.Builder;
 import lombok.experimental.NonFinal;
 
@@ -18,12 +20,12 @@ public class FilesystemMonitor implements FilesystemNotifier {
     private final FilesystemConstraints watchedConstraints;
 
     private final BlockingQueue<FilesystemEvent> queue = new ArrayBlockingQueue<>(100000);
-    private final ExecutorService producersExecutor = Executors.newSingleThreadExecutor(
+    private final ExecutorService producersExecutor = new LoggingExecutorService(Executors.newSingleThreadExecutor(
             new FilesystemMonitorThreadFactory(getClass().getSimpleName() + "Producers")
-    );
-    private final ExecutorService consumersExecutor = Executors.newSingleThreadExecutor(
+    ));
+    private final ExecutorService consumersExecutor = new LoggingExecutorService(Executors.newSingleThreadExecutor(
             new FilesystemMonitorThreadFactory(getClass().getSimpleName() + "Consumers")
-    );
+    ));
 
     @NonFinal
     private FilesystemNotifier watcher;

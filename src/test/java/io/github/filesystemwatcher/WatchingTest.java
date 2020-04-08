@@ -38,7 +38,7 @@ class WatchingTest {
         //when
         monitor.startWatching();
         //TODO Monitor should initialize recursive directory watchers if possible before exiting from startWatching method.
-        Thread.sleep(50);
+        Thread.sleep(100);
         coordinator.watcherCompleted();
 
         //then
