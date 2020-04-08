@@ -67,7 +67,9 @@ public class FilesystemWatcher implements FilesystemNotifier {
 
     private void stopWatching(Path path) {
         WatchKey key = watchedKeys.get(path);
-        key.cancel();
+        if (key != null) {
+            key.cancel();
+        }
         watchedKeys.remove(path);
         log.info("Watching stopped: {}", path);
     }
@@ -113,10 +115,9 @@ public class FilesystemWatcher implements FilesystemNotifier {
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 FilesystemEvent event = blockingQueue.take();
-
                 Path path = event.getPath();
-                if (Files.isDirectory(path)) {
-                    if (List.of(CREATED, INITIAL).contains(event.getEventType())) {
+                if (List.of(CREATED, INITIAL).contains(event.getEventType())) {
+                    if (Files.isDirectory(path)) {
                         startWatching(path);
                         // TODO refactor
                         if (CREATED == event.getEventType()) {
@@ -130,9 +131,9 @@ public class FilesystemWatcher implements FilesystemNotifier {
                                     }).build()
                                     .startWatching();
                         }
-                    } else if (DELETED == event.getEventType()) {
-                        stopWatching(path);
                     }
+                } else if (DELETED == event.getEventType()) {
+                    stopWatching(path);
                 }
                 log.info("Consumed event: " + event);
 
@@ -154,6 +155,7 @@ public class FilesystemWatcher implements FilesystemNotifier {
             FileSystem fileSystem = FileSystems.getDefault();
             return Try.of(fileSystem::newWatchService).getOrElseThrow(EXCEPTION_SUPPLIER);
         }
+
         private WatchKey registerWatchable(Watchable watchable) {
             return Try.of(() -> watchable.register(watchService, ALL_EVENT_KINDS, SensitivityWatchEventModifier.HIGH)).getOrElseThrow(EXCEPTION_SUPPLIER);
         }
