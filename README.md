@@ -28,6 +28,12 @@ FilesystemMonitor.builder()
     .watch();
 ```
 
+## Changelog
+
+### 0.3.0
+1. Support for systems with pooling WatchService implementation (FreeBSD, MacOS)
+1. Surround threads with better logging so that discovering exceptions becomes easier.
+
 
 
 
