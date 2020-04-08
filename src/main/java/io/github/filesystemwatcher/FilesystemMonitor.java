@@ -1,10 +1,11 @@
 package io.github.filesystemwatcher;
 
+import io.github.filesystemwatcher.threads.FilesystemMonitorThreadFactory;
+import io.github.filesystemwatcher.threads.LoggingExecutorService;
 import lombok.Builder;
 import lombok.experimental.NonFinal;
 
 import java.nio.file.Path;
-import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -14,51 +15,56 @@ import java.util.function.Consumer;
 @Builder
 public class FilesystemMonitor implements FilesystemNotifier {
 
-	private final Path watchedPath;
-	private final Consumer<FilesystemEvent> watchedConsumer;
-	private final FilesystemConstraints watchedConstraints;
+    private final Path watchedPath;
+    private final Consumer<FilesystemEvent> watchedConsumer;
+    private final FilesystemConstraints watchedConstraints;
 
-	private final BlockingQueue<FilesystemEvent> queue = new ArrayBlockingQueue<>(100000);
-	private final ExecutorService producersExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "filesystem-monitor-producers" + UUID.randomUUID().toString()));
-	private final ExecutorService consumersExecutor = Executors.newSingleThreadExecutor(r -> new Thread(r, "filesystem-monitor-consumers" + UUID.randomUUID().toString()));
+    private final BlockingQueue<FilesystemEvent> queue = new ArrayBlockingQueue<>(100000);
+    private final ExecutorService producersExecutor = new LoggingExecutorService(Executors.newSingleThreadExecutor(
+            new FilesystemMonitorThreadFactory(getClass().getSimpleName() + "Producers")
+    ));
+    private final ExecutorService consumersExecutor = new LoggingExecutorService(Executors.newSingleThreadExecutor(
+            new FilesystemMonitorThreadFactory(getClass().getSimpleName() + "Consumers")
+    ));
 
-	@NonFinal
-	private FilesystemNotifier watcher;
-	@NonFinal
-	private FilesystemNotifier reader;
+    @NonFinal
+    private FilesystemNotifier watcher;
+    @NonFinal
+    private FilesystemNotifier reader;
 
-	@Override
-	public void startWatching() {
-		watcher = FilesystemWatcher.builder()
-				.watchedPath(watchedPath)
-				.watchedConstraints(watchedConstraints)
-				.watchedConsumer(watchedConsumer)
-				.producersExecutor(producersExecutor)
-				.consumersExecutor(consumersExecutor)
-				.blockingQueue(queue)
-				.build();
+    @Override
+    public void startWatching() {
 
-		reader = FilesystemReader.builder()
-				.watchedPath(watchedPath)
-				.watchedConstraints(watchedConstraints)
-				.watchedConsumer(this::consumeEvent)
-				.build();
+        watcher = FilesystemWatcher.builder()
+                .watchedPath(watchedPath)
+                .watchedConstraints(watchedConstraints)
+                .watchedConsumer(watchedConsumer)
+                .producersExecutor(producersExecutor)
+                .consumersExecutor(consumersExecutor)
+                .blockingQueue(queue)
+                .build();
 
-		watcher.startWatching();
-		reader.startWatching();
-	}
+        reader = FilesystemReader.builder()
+                .watchedPath(watchedPath)
+                .watchedConstraints(watchedConstraints)
+                .watchedConsumer(this::consumeEvent)
+                .build();
 
-	@Override
-	public void stopWatching() {
-		reader.stopWatching();
-		watcher.stopWatching();
-	}
+        watcher.startWatching();
+        reader.startWatching();
+    }
 
-	private void consumeEvent(FilesystemEvent event) {
-		try {
-			queue.put(event);
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-		}
-	}
+    @Override
+    public void stopWatching() {
+        reader.stopWatching();
+        watcher.stopWatching();
+    }
+
+    private void consumeEvent(FilesystemEvent event) {
+        try {
+            queue.put(event);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 }
