@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/filesystem-watcher/filesystem-watcher.svg?branch=master)](https://travis-ci.org/filesystem-watcher/filesystem-watcher)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=filesystem-watcher&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=filesystem-watcher)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=filesystem-watcher&metric=coverage)](https://sonarcloud.io/dashboard?id=filesystem-watcher)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.filesystem-watcher/filesystem-watcher/badge.svg)](https://maven-badges.herokuapp.com/maven-central/cz.jirutka.rsql/rsql-parser)
 # Filesystem Watcher
 Watch for filesystem changes in you Java project in simple and robust way.
 Project utilize Java 7 APIs like WatchService (which does not pool filesystem for changes in most common environments) 
